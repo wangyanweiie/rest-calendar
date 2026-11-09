@@ -1,5 +1,12 @@
 # 部署到 GitHub Pages（微信可直接打开）
 
+**当前状态：已部署 ✅**
+
+- 仓库：<https://github.com/wangyanweiie/rest-calendar>
+- 线上地址：<https://wangyanweiie.github.io/rest-calendar/>
+- Pages 源：`main` 分支 / 根目录，每次 `git push` 后约 1 分钟自动重新发布
+
+
 仓库已经在本地初始化并完成首次提交（分支 `main`），只差「推到 GitHub + 打开 Pages」。
 
 ---

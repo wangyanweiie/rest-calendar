@@ -1,6 +1,6 @@
 # `<rest-calendar>` · 上二休三休息日历组件
 
-> 在线预览（部署到 GitHub Pages 后替换为你的地址）：`https://<用户名>.github.io/<仓库名>/`
+> 在线预览：<https://wangyanweiie.github.io/rest-calendar/>
 > 手机/微信里直接打开该链接即可；`standalone.html` 是单文件版，可离线打开或发给别人。
 
 零依赖 Web Component（原生 Custom Element + Shadow DOM），单文件即可引入，支持桌面与移动端。
