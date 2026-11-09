@@ -142,6 +142,8 @@
       --rc-muted: #94a3b8;
       font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
       color: var(--rc-ink);
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     * { box-sizing: border-box; }
     .wrap {
@@ -181,7 +183,7 @@
       position: relative; min-height: 88px; min-width: 0; padding: 7px 8px 6px;
       border: 1px solid var(--rc-line); border-radius: 12px; background: #fff;
       display: flex; flex-direction: column; gap: 2px;
-      font: inherit; text-align: left; cursor: pointer; overflow: hidden;
+      font: inherit; text-align: left; cursor: pointer; overflow: hidden; touch-action: manipulation;
       transition: transform .12s ease, box-shadow .12s ease;
     }
     .cell:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -10px rgba(15, 23, 42, .45); }
@@ -272,7 +274,7 @@
 
     /* ---- 备注弹层 ---- */
     .note-mask {
-      position: fixed; inset: 0; z-index: 9999; padding: 20px;
+      position: fixed; inset: 0; z-index: 9999; padding: 20px; overscroll-behavior: contain;
       background: rgba(15, 23, 42, .42);
       display: flex; align-items: center; justify-content: center;
     }
@@ -288,7 +290,7 @@
     .note-input {
       width: 100%; min-height: 88px; resize: vertical; box-sizing: border-box;
       border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
-      font: inherit; font-size: 13px; color: #0f172a; outline: none;
+      font: inherit; font-size: 16px; color: #0f172a; outline: none;
     }
     .note-input:focus { border-color: #86efac; box-shadow: 0 0 0 3px #dcfce7; }
     .note-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
@@ -700,6 +702,10 @@
       }
 
       function closeNote() {
+        try {
+          if (noteInput && document.activeElement === noteInput) noteInput.blur();
+          noteInput.blur();
+        } catch (e) {}
         mask.hidden = true;
         self._activeNote = null;
         resetDelete();
