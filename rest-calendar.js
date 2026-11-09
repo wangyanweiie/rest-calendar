@@ -350,6 +350,11 @@
     get showHolidays() { return this.getAttribute('show-holidays') !== 'false'; }
     get period() { return this.workDays + this.restDays; }
     get notesEnabled() { return this.getAttribute('notes-enabled') !== 'false'; }
+
+    /* 窄屏（手机）判定：备注在格子里只保留前 2 个字 */
+    _isNarrow() {
+      try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; }
+    }
     get storageKey() { return this.getAttribute('storage-key') || 'rest-calendar-notes-v1'; }
 
     _todayISO() {
@@ -359,6 +364,15 @@
 
     /* ---------- 生命周期 ---------- */
     connectedCallback() {
+      this._narrow = this._isNarrow();
+      if (!this._resizeBound) {
+        this._resizeBound = true;
+        var self0 = this;
+        window.addEventListener('resize', function () {
+          var n = self0._isNarrow();
+          if (n !== self0._narrow) { self0._narrow = n; self0._render(); }
+        });
+      }
       this._loadNotes();
       /* 多标签页同步：其它标签页改动备注时刷新本页 */
       if (!this._storageBound) {
@@ -606,7 +620,9 @@
             (info.isStatutory ? '节' : '假') + '</span></span>';
         }
         var state = !info.inRange ? '' : (info.isWork ? '班' : '休');
-        var noteText = info.inRange && info.note ? escapeHTML(info.note) : '';
+        var noteRaw = info.inRange && info.note ? info.note : '';
+        if (noteRaw && self._narrow && noteRaw.length > 2) noteRaw = noteRaw.slice(0, 2) + '…';
+        var noteText = noteRaw ? escapeHTML(noteRaw) : '';
         var holName = info.inRange && info.holiday ? info.holiday.name : '';
         var label = info.weekdayLabel + ' ' + iso + ' · ' + (info.inRange ? (info.isWork ? '上班' : '休息') : '超出范围') +
           (info.holiday ? ' · ' + info.holiday.name + (info.isStatutory ? '（法定节假日）' : '（假期）') : '') +

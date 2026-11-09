@@ -208,8 +208,6 @@
     <button class="btn primary" id="exportIcs">导出 .ics</button>
   </div>
 
-  <div class="stats" id="stats"></div>
-
   <rest-calendar id="cal" start="2026-09-30" end="2027-12-31" cycle-start="2026-09-30" week-start="1"></rest-calendar>
 
   <div class="detail" id="detail">
@@ -226,6 +224,8 @@
       <div class="hol-list" id="holList"></div>
     </div>
   </div>
+
+  <div class="stats" id="stats"></div>
 
   <section class="share">
     <img class="qr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAJYAQMAAACEqAqfAAAABlBMVEX///8PFyqAptkDAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAC30lEQVR4nO3dQXKjMBCFYVFZsPQROApHM0fLUXwEL1lQMNXqltQCZsZTBhc1+d8mMoiPXaM0chICIYSQH5LbssqjOt3YUT9x2F70xMLCwsI6xZrrS6N1T27jLigTb4KXYGFhYWGdaPU6+anWl4xHOdnJ6Du0emlyB7U6/TRiYWFhYX3aWnJJ73VsEye9CAsLCwvrv7AGZTpd07f55IKFhYWF9WkrZ6/e7+T1fg4WFhYW1lvWKlbvWy3p8WFgJb2RfszXv70XxcLCwsK6iLWT1HMXNzgr5B7M68HCwsLCesPyPRir90H2rozyo3OLf/tFYFPvRywsLCys86xFltpB9xTOcv1klrugeq9pB7pc+6v1PRYWFhbWJS3bgjhm18fvJ7fp6dnhrRIsLCwsrCOtW26FW0q9t+0p3zLKffIUu0PebI6FhYWFdbbVWA/G9hTGcZ8eBn6TS2yip4Y6FhYWFtb1rXp9P9vzYnBWvukmf+7BYGFhYWG9b4W63vsp9vdR3BJecpdL9+s9FhYWFtaRVtm7Mrh6H5NvZONqD7g1a6obYWFhYWEdawX3ujLGyvii01O9l7zaN8HCwsLCuqDl9xeW7Slxikxv8ngnk/1msLdXEQsLCwvrCMuX8ar2r9f6jb+pt1KwsLCwsE6x2nUPJk6JY7+FsJcDg4zM2vZzsLCwsLCua9kTIK71H+lMsHG/WGY3XsyyA08sLCwsrBOsnWz65EHbLOW9aEznVCwsLCysM6yd78vHtPpp9S6zl59570pM1YPBwsLCwrquNZcP8nh4uMdDTLzeTi5qxZS9ir99L4qFhYWF9b7V66TN/zS2tGLZTdPiXzK5G2FhYWFhfdTKffJRX13GiZO7R3H/Wu+xsLCwsC5qLfWaPo8n/YPhVZKNhYWFhXWCldNYjb+79b3V+/KFIOuTx7HffIiFhYWFdbi1ymZNXk+c8hc4Oz0wbqZgYWFhYV3QIoQQ8gPyC0qJ4skcs5PJAAAAAElFTkSuQmCC" alt="扫码打开上二休三休息日历">
@@ -598,6 +598,11 @@
     get showHolidays() { return this.getAttribute('show-holidays') !== 'false'; }
     get period() { return this.workDays + this.restDays; }
     get notesEnabled() { return this.getAttribute('notes-enabled') !== 'false'; }
+
+    /* 窄屏（手机）判定：备注在格子里只保留前 2 个字 */
+    _isNarrow() {
+      try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; }
+    }
     get storageKey() { return this.getAttribute('storage-key') || 'rest-calendar-notes-v1'; }
 
     _todayISO() {
@@ -607,6 +612,15 @@
 
     /* ---------- 生命周期 ---------- */
     connectedCallback() {
+      this._narrow = this._isNarrow();
+      if (!this._resizeBound) {
+        this._resizeBound = true;
+        var self0 = this;
+        window.addEventListener('resize', function () {
+          var n = self0._isNarrow();
+          if (n !== self0._narrow) { self0._narrow = n; self0._render(); }
+        });
+      }
       this._loadNotes();
       /* 多标签页同步：其它标签页改动备注时刷新本页 */
       if (!this._storageBound) {
@@ -854,7 +868,9 @@
             (info.isStatutory ? '节' : '假') + '</span></span>';
         }
         var state = !info.inRange ? '' : (info.isWork ? '班' : '休');
-        var noteText = info.inRange && info.note ? escapeHTML(info.note) : '';
+        var noteRaw = info.inRange && info.note ? info.note : '';
+        if (noteRaw && self._narrow && noteRaw.length > 2) noteRaw = noteRaw.slice(0, 2) + '…';
+        var noteText = noteRaw ? escapeHTML(noteRaw) : '';
         var holName = info.inRange && info.holiday ? info.holiday.name : '';
         var label = info.weekdayLabel + ' ' + iso + ' · ' + (info.inRange ? (info.isWork ? '上班' : '休息') : '超出范围') +
           (info.holiday ? ' · ' + info.holiday.name + (info.isStatutory ? '（法定节假日）' : '（假期）') : '') +
