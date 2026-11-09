@@ -1,0 +1,42 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: netlify-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - name: 检查 secrets 是否已配置
+        id: guard
+        run: |
+          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::未配置 NETLIFY_AUTH_TOKEN / NETLIFY_SITE_ID，跳过部署"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.configured == 'true'
+        with:
+          node-version: 20
+
+      - name: 部署到 Netlify
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          npx --yes netlify-cli@17 deploy --prod --dir . \
+            --site "$NETLIFY_SITE_ID" \
+            --message "GitHub Actions ${GITHUB_SHA::7} · ${GITHUB_REF_NAME}"
