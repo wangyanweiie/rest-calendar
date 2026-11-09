@@ -49,6 +49,7 @@ calendar/
 | `calendar-ready` | — | 首次渲染完成 |
 | `month-change` | `{year, month}` | 切换月份 |
 | `day-click` | 单日完整信息对象 | 点击日期 |
+| `notes-changed` | `{iso, note, notes}` | 备注新增/修改/删除 |
 
 ```js
 document.querySelector('rest-calendar').addEventListener('day-click', e => {
@@ -63,6 +64,10 @@ document.querySelector('rest-calendar').addEventListener('day-click', e => {
 | `getDayInfo('2027-02-06')` | 单日信息：`cycle` / `restOnWeekend` / `holiday` / `makeup` / `isStatutory` … |
 | `getDays()` | 范围内逐日信息数组 |
 | `getSummary()` | 统计：`total / work / rest / redOnWeekend / statutoryDays / holidayDays / holidayPeriodDays / makeupDays / redDates` |
+| `getNote(iso)` | 读取某天备注 |
+| `setNote(iso, text)` | 写入备注（空字符串等于删除） |
+| `removeNote(iso)` | 删除备注 |
+| `getNotes()` | 全部备注 `{iso: text}` |
 | `getHolidayPeriods()` | 官方假期区间：`[{festival, start, end, days, statutory}]`（按当前范围裁剪）|
 | `setRange(start, end)` | 改日期范围 |
 | `goToMonth(y, m)` | 跳转月份 |
@@ -72,6 +77,14 @@ document.querySelector('rest-calendar').addEventListener('day-click', e => {
 | `buildICS()` | 生成 `.ics` 文本 |
 
 演示页还支持深链：`index.html?m=2027-02&start=2026-11-09&end=2027-02-13`。
+
+## 备注功能
+
+- 交互：**长按日期块 550ms** 或右键 → 弹窗输入；删除需二次确认（「删除」→「确认删除？」）
+- 显示：有备注的日期块显示橙色描边 + 备注文字（超长自动省略），并出现在图例「有备注」中
+- 存储：`localStorage`，键默认 `rest-calendar-notes-v1`，可用属性 `storage-key` 自定义
+- 多标签页自动同步（监听 `storage` 事件）
+- 关闭备注功能：`notes-enabled="false"`
 
 ## 视觉规则
 

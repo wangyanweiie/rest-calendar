@@ -22,6 +22,7 @@
  *   getDays()        范围内逐日信息数组
  *   getSummary()     统计
  *   setHolidays(map) 注入自定义节假日
+ *   getNote(iso) / setNote(iso, text) / removeNote(iso) / getNotes()  日期备注（localStorage）
  *   setRange(start, end)
  *   goToMonth(y, m)
  *   buildICS()       生成 .ics 文本
@@ -121,6 +122,11 @@
     return /^\d{4}-\d{2}-\d{2}$/.test(String(s)) ? s : fallback;
   }
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
 
   var STYLE = `
     :host {
@@ -250,6 +256,53 @@
     .sw-work { background: #fff; }
     .sw-holiday { background: var(--rc-gold-soft); border-color: #fcd34d; }
     .sw-makeup { background: #1e293b; border-color: #1e293b; }
+    .sw-note { background: #fff7ed; border-color: #fb923c; }
+
+    /* ---- 备注 ---- */
+    .cell.has-note { box-shadow: inset 0 0 0 2px #fb923c; }
+    .cell.is-rest.is-weekend.has-note {
+      box-shadow: inset 0 0 0 2px #fed7aa, 0 10px 20px -14px rgba(220, 38, 38, .9);
+    }
+    .note-text {
+      flex: 1 1 auto; min-width: 0; margin-left: 4px;
+      font-size: 9.5px; line-height: 1.25; font-weight: 700; text-align: left;
+      color: #c2410c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cell.is-rest.is-weekend .note-text { color: #fff; opacity: .95; }
+
+    /* ---- 备注弹层 ---- */
+    .note-mask {
+      position: fixed; inset: 0; z-index: 9999; padding: 20px;
+      background: rgba(15, 23, 42, .42);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .note-mask[hidden] { display: none; }
+    .note-card {
+      width: min(420px, 100%); background: #fff; border-radius: 16px; padding: 18px;
+      box-shadow: 0 24px 60px -20px rgba(15, 23, 42, .5);
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    .note-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .note-title { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .note-sub { font-size: 11.5px; color: #94a3b8; white-space: nowrap; }
+    .note-input {
+      width: 100%; min-height: 88px; resize: vertical; box-sizing: border-box;
+      border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
+      font: inherit; font-size: 13px; color: #0f172a; outline: none;
+    }
+    .note-input:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px #dbeafe; }
+    .note-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .note-btn {
+      font: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 14px;
+      border-radius: 9px; border: 1px solid #e2e8f0; background: #fff; color: #334155;
+      cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+    }
+    .note-btn:hover { background: #f8fafc; }
+    .note-btn.primary { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+    .note-btn.primary:hover { background: #1d3f9e; }
+    .note-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+    .note-btn.danger.confirming { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .note-btn[hidden] { display: none; }
 
     @media (max-width: 640px) {
       .wrap { padding: 14px 10px 10px; border-radius: 16px; }
@@ -270,7 +323,8 @@
 
   class RestCalendar extends HTMLElement {
     static get observedAttributes() {
-      return ['start', 'end', 'cycle-start', 'work-days', 'rest-days', 'week-start', 'show-holidays', 'month'];
+      return ['start', 'end', 'cycle-start', 'work-days', 'rest-days', 'week-start',
+              'show-holidays', 'month', 'notes-enabled', 'storage-key'];
     }
 
     constructor() {
@@ -281,6 +335,9 @@
       this.spans = DEFAULT_SPANS.map(function (x) { return Object.assign({}, x); });
       this._month = null;
       this._ready = false;
+      this._notes = {};
+      this._notesLoaded = false;
+      this._activeNote = null;
     }
 
     /* ---------- 配置 ---------- */
@@ -292,6 +349,8 @@
     get weekStart() { return this.getAttribute('week-start') === '0' ? 0 : 1; }
     get showHolidays() { return this.getAttribute('show-holidays') !== 'false'; }
     get period() { return this.workDays + this.restDays; }
+    get notesEnabled() { return this.getAttribute('notes-enabled') !== 'false'; }
+    get storageKey() { return this.getAttribute('storage-key') || 'rest-calendar-notes-v1'; }
 
     _todayISO() {
       var n = new Date();
@@ -300,6 +359,19 @@
 
     /* ---------- 生命周期 ---------- */
     connectedCallback() {
+      this._loadNotes();
+      /* 多标签页同步：其它标签页改动备注时刷新本页 */
+      if (!this._storageBound) {
+        this._storageBound = true;
+        var self = this;
+        window.addEventListener('storage', function (e) {
+          if (e.key && e.key === self.storageKey) {
+            self._notesLoaded = false;
+            self._loadNotes();
+            self._render();
+          }
+        });
+      }
       this._render();
       if (!this._ready) {
         this._ready = true;
@@ -311,6 +383,48 @@
       if (oldV === newV || !this.shadowRoot) return;
       if (name === 'month') this._month = null;
       if (this.isConnected) this._render();
+    }
+
+    /* ---------- 备注（localStorage）---------- */
+    _loadNotes() {
+      if (this._notesLoaded) return;
+      this._notesLoaded = true;
+      try {
+        var raw = localStorage.getItem(this.storageKey);
+        var data = raw ? JSON.parse(raw) : {};
+        this._notes = (data && typeof data === 'object') ? data : {};
+      } catch (e) { this._notes = {}; }
+    }
+
+    _saveNotes() {
+      try { localStorage.setItem(this.storageKey, JSON.stringify(this._notes)); } catch (e) {}
+    }
+
+    getNote(iso) { this._loadNotes(); return this._notes[iso] || ''; }
+    getNotes() { this._loadNotes(); return Object.assign({}, this._notes); }
+
+    setNote(iso, text) {
+      var v = String(text == null ? '' : text).trim();
+      if (!v) { this.removeNote(iso); return ''; }
+      this._loadNotes();
+      this._notes[iso] = v;
+      this._saveNotes();
+      this._render();
+      this.dispatchEvent(new CustomEvent('notes-changed', {
+        detail: { iso: iso, note: v, notes: this.getNotes() }, bubbles: true, composed: true
+      }));
+      return v;
+    }
+
+    removeNote(iso) {
+      this._loadNotes();
+      if (!this._notes[iso]) return;
+      delete this._notes[iso];
+      this._saveNotes();
+      this._render();
+      this.dispatchEvent(new CustomEvent('notes-changed', {
+        detail: { iso: iso, note: '', notes: this.getNotes() }, bubbles: true, composed: true
+      }));
     }
 
     /* ---------- 数据 ---------- */
@@ -340,6 +454,7 @@
         holiday: holiday,
         isStatutory: !!holiday && holiday.type === 'statutory',
         makeup: makeup,
+        note: this.getNote(iso),
         inRange: dt >= startDt && dt <= endDt
       };
     }
@@ -481,6 +596,7 @@
         else cls.push(info.isWork ? 'is-work' : 'is-rest');
         if (info.isRest && info.weekend && info.inRange) cls.push('is-weekend');
         if (iso === todayISO) cls.push('is-today');
+        if (info.inRange && info.note) cls.push('has-note');
 
         var tag = '';
         if (info.inRange) {
@@ -490,15 +606,18 @@
             (info.isStatutory ? '节' : '假') + '</span></span>';
         }
         var state = !info.inRange ? '' : (info.isWork ? '班' : '休');
+        var noteText = info.inRange && info.note ? escapeHTML(info.note) : '';
         var holName = info.inRange && info.holiday ? info.holiday.name : '';
         var label = info.weekdayLabel + ' ' + iso + ' · ' + (info.inRange ? (info.isWork ? '上班' : '休息') : '超出范围') +
           (info.holiday ? ' · ' + info.holiday.name + (info.isStatutory ? '（法定节假日）' : '（假期）') : '') +
           (info.makeup ? ' · ' + info.makeup + ' 上班' : '') +
-          (info.restOnWeekend ? ' · 与周末重合' : '');
+          (info.restOnWeekend ? ' · 与周末重合' : '') +
+          (info.note ? ' · 备注：' + info.note : '');
 
         return '<button class="' + cls.join(' ') + '" data-iso="' + iso + '" type="button" aria-label="' + label + '" title="' + label + '">' +
           '<div class="row-top"><span class="num">' + info.day + '</span>' + tag + '</div>' +
           '<div class="row-bot">' + (state ? '<span class="chip">' + state + '</span>' : '') +
+          (noteText ? '<span class="note-text">' + noteText + '</span>' : '') +
           (holName ? '<span class="hol-name">' + holName + '</span>' : '') + '</div>' +
           '</button>';
       }).join('');
@@ -523,6 +642,18 @@
             '<span class="legend-item"><span class="swatch sw-red"></span>休息日与周末重合（标红）</span>' +
             '<span class="legend-item"><span class="swatch sw-holiday"></span>法定节假日</span>' +
             '<span class="legend-item"><span class="swatch sw-makeup"></span>调休上班</span>' +
+            '<span class="legend-item"><span class="swatch sw-note"></span>有备注</span>' +
+          '</div>' +
+          '<div class="note-mask" hidden>' +
+            '<div class="note-card" role="dialog" aria-modal="true">' +
+              '<div class="note-head"><span class="note-title"></span><span class="note-sub"></span></div>' +
+              '<textarea class="note-input" rows="3" placeholder="例如：调休、换班、请假…"></textarea>' +
+              '<div class="note-actions">' +
+                '<button class="note-btn danger" type="button" data-act="del" hidden>删除</button>' +
+                '<button class="note-btn" type="button" data-act="cancel">取消</button>' +
+                '<button class="note-btn primary" type="button" data-act="save">保存</button>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
         '</div>';
 
@@ -538,9 +669,115 @@
           self.dispatchEvent(new CustomEvent('month-change', { detail: self._month, bubbles: true, composed: true }));
         });
       });
+      /* ---- 备注弹层 ---- */
+      var mask = root.querySelector('.note-mask');
+      var noteInput = root.querySelector('.note-input');
+      var noteTitle = root.querySelector('.note-title');
+      var noteSub = root.querySelector('.note-sub');
+      var delBtn = root.querySelector('[data-act="del"]');
+      var confirming = false;
+
+      function resetDelete() {
+        confirming = false;
+        delBtn.textContent = '删除';
+        delBtn.classList.remove('confirming');
+      }
+
+      function closeNote() {
+        mask.hidden = true;
+        self._activeNote = null;
+        resetDelete();
+      }
+
+      function openNote(iso) {
+        if (!self.notesEnabled) return;
+        var info = self.getDayInfo(iso);
+        if (!info.inRange) return;
+        self._activeNote = iso;
+        noteTitle.textContent = iso + ' · ' + info.weekdayLabel;
+        noteSub.textContent = info.isWork ? '上班日' : '休息日';
+        noteInput.value = info.note || '';
+        delBtn.hidden = !info.note;
+        resetDelete();
+        mask.hidden = false;
+        setTimeout(function () { try { noteInput.focus(); } catch (e) {} }, 30);
+      }
+
+      if (mask) {
+        root.querySelector('[data-act="cancel"]').addEventListener('click', closeNote);
+        mask.addEventListener('click', function (e) { if (e.target === mask) closeNote(); });
+        document.addEventListener('keydown', function (e) {
+          if (!mask.hidden && e.key === 'Escape') closeNote();
+        });
+
+        delBtn.addEventListener('click', function () {
+          var iso = self._activeNote;
+          if (!iso) return;
+          if (!confirming) {
+            confirming = true;
+            delBtn.textContent = '确认删除？';
+            delBtn.classList.add('confirming');
+            return;
+          }
+          closeNote();
+          self.removeNote(iso);
+        });
+
+        root.querySelector('[data-act="save"]').addEventListener('click', function () {
+          var iso = self._activeNote;
+          if (!iso) return;
+          var val = noteInput.value.trim();
+          if (!val && self.getNote(iso)) {   /* 清空已有备注 = 删除，需二次确认 */
+            if (!confirming) {
+              confirming = true;
+              delBtn.hidden = false;
+              delBtn.textContent = '确认删除？';
+              delBtn.classList.add('confirming');
+              return;
+            }
+            closeNote();
+            self.removeNote(iso);
+            return;
+          }
+          if (!val) { closeNote(); return; }
+          closeNote();
+          self.setNote(iso, val);
+        });
+      }
+
+      /* ---- 长按 550ms 打开备注；右键同样打开 ---- */
       root.querySelectorAll('.cell[data-iso]').forEach(function (cell) {
+        var iso = cell.getAttribute('data-iso');
+        var pressTimer = null;
+        var suppressClick = false;
+
+        function startPress(e) {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          if (!self.notesEnabled) return;
+          clearTimeout(pressTimer);
+          pressTimer = setTimeout(function () {
+            pressTimer = null;
+            suppressClick = true;
+            openNote(iso);
+          }, 550);
+        }
+        function cancelPress() {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        }
+
+        cell.addEventListener('pointerdown', startPress);
+        cell.addEventListener('pointerup', cancelPress);
+        cell.addEventListener('pointerleave', cancelPress);
+        cell.addEventListener('pointercancel', cancelPress);
+        cell.addEventListener('contextmenu', function (e) {
+          if (!self.notesEnabled) return;
+          e.preventDefault();
+          openNote(iso);
+        });
+
         cell.addEventListener('click', function () {
-          var info = self.getDayInfo(cell.getAttribute('data-iso'));
+          if (suppressClick) { suppressClick = false; return; }
+          var info = self.getDayInfo(iso);
           if (!info.inRange) return;
           self.dispatchEvent(new CustomEvent('day-click', { detail: info, bubbles: true, composed: true }));
         });

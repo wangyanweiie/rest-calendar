@@ -100,6 +100,7 @@
   .pill.red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
   .pill.gold { background: #fffbeb; color: #92400e; border-color: #fde68a; }
   .pill.dark { background: #1e293b; color: #fff; }
+  .pill.note { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
   .detail .d-note { color: #94a3b8; font-size: 12px; }
 
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
@@ -191,7 +192,8 @@
     <h1>上二休三 · 休息日历 <span class="badge">WEB COMPONENT</span></h1>
     <p class="sub">
       排班规则：每 5 天循环「上班 2 天 → 休息 3 天」。休息日若落在周六 / 周日 <b style="color:#ef4444">标红</b>，
-      并额外标注<b style="color:#b45309">法定节假日</b>与<b>调休上班</b>日（覆盖 2027 全年 7 个节日）。
+      并额外标注<b style="color:#b45309">法定节假日</b>与<b>调休上班</b>日。
+      <b>长按日期</b>可添加/删除备注。
     </p>
   </header>
 
@@ -199,8 +201,8 @@
     <div class="field">起始 <input type="date" id="start" value="2026-10-01"></div>
     <div class="field">截止 <input type="date" id="end" value="2027-12-31"></div>
     <button class="btn" id="reset">重置</button>
-    <button class="btn" id="year2027" title="只看 2027-01-01 ~ 2027-12-31">全年 2027</button>
     <button class="btn" id="onlySpring" title="截止到 2027-02-06（春节当天）">只到春节</button>
+    <button class="btn" id="year2027" title="只看 2027-01-01 ~ 2027-12-31">2027全年</button>
     <button class="btn" id="today">回到今天</button>
     <div class="spacer"></div>
     <button class="btn primary" id="exportIcs">导出 .ics</button>
@@ -342,7 +344,13 @@
   });
 
   cal.addEventListener('calendar-ready', function () { syncInputs(); renderStats(); });
+  var currentDetailIso = null;
   cal.addEventListener('day-click', function (e) { renderDetail(e.detail); });
+  cal.addEventListener('notes-changed', function (e) {
+    if (currentDetailIso && currentDetailIso === e.detail.iso) {
+      renderDetail(cal.getDayInfo(currentDetailIso));
+    }
+  });
 
   document.getElementById('today').addEventListener('click', function () {
     var n = new Date();
@@ -350,6 +358,7 @@
   });
 
   function renderDetail(d) {
+    currentDetailIso = d.iso;
     var box = document.getElementById('detail');
     var pills = [];
     pills.push('<span class="pill ' + (d.isWork ? 'work' : 'rest') + '">' + (d.isWork ? '上班' : '休息') + '</span>');
@@ -359,6 +368,12 @@
       pills.push('<span class="pill gold">' + d.holiday.name + (d.isStatutory ? ' · 法定节假日' : ' · 假期（调休）') + '</span>');
     }
     if (d.makeup) pills.push('<span class="pill dark">' + d.makeup + ' 上班</span>');
+    if (d.note) {
+      var safe = String(d.note).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+      pills.push('<span class="pill note">备注：' + safe + '</span>');
+    }
     var n0 = new Date();
     var todayStr = n0.getFullYear() + '-' + ('0' + (n0.getMonth() + 1)).slice(-2) + '-' + ('0' + n0.getDate()).slice(-2);
     if (d.iso === todayStr) pills.push('<span class="pill red">今天</span>');
