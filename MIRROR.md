@@ -4,7 +4,7 @@
 > 所以 Gitee 只能用来**存代码**，没法再托管网页。国内能跑静态站的免费方案见下面。
 
 当前线上：
-- **主地址（Netlify，微信推荐）**：<https://chimerical-heliotrope-4c52ff.netlify.app/>
+- **主地址（Netlify，微信推荐）**：<https://rest-calendar.netlify.app/>
 - 备用（GitHub Pages）：<https://wangyanweiie.github.io/rest-calendar/>
 Gitee 代码镜像：<https://gitee.com/wangyanweiie/rest-calendar>
 
@@ -48,7 +48,7 @@ git push gitee main
 
 ### ✅ 方案 B：Netlify（已采用）
 
-> 已用 Netlify Drop 部署：<https://chimerical-heliotrope-4c52ff.netlify.app/>
+> 已用 Netlify Drop 部署：<https://rest-calendar.netlify.app/>
 >
 > ⚠️ Drop 部署是**静态快照**，之后改代码不会自动更新。要自动部署：Site settings →
 > Build & deploy → **Link repository** → 选 `wangyanweiie/rest-calendar`，构建命令留空、发布目录 `/`。

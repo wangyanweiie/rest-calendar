@@ -1,6 +1,6 @@
 # `<rest-calendar>` · 上二休三休息日历组件
 
-> 在线预览（国内/微信推荐）：<https://chimerical-heliotrope-4c52ff.netlify.app/>
+> 在线预览（国内/微信推荐）：<https://rest-calendar.netlify.app/>
 > 备用（GitHub Pages）：<https://wangyanweiie.github.io/rest-calendar/>
 
 <img src="qrcode.png" alt="扫码打开" width="150">
