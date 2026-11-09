@@ -103,6 +103,25 @@
   .detail .d-note { color: #94a3b8; font-size: 12px; }
 
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+
+  .share {
+    display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    margin-top: 18px; padding: 18px;
+    background: #fff; border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 12px 30px -28px rgba(15, 23, 42, .55);
+  }
+  .share .qr {
+    width: 132px; height: 132px; flex: 0 0 auto; padding: 6px; background: #fff;
+    border: 1px solid var(--line); border-radius: 14px;
+  }
+  .share h2 { margin: 0 0 8px; font-size: 14px; letter-spacing: .02em; }
+  .share p { margin: 0 0 6px; font-size: 12.5px; color: #475569; }
+  .share a { color: #2563eb; text-decoration: none; border-bottom: 1px dashed #93c5fd; word-break: break-all; }
+  .share .share-hint { color: #94a3b8; font-size: 11.5px; line-height: 1.7; margin-top: 8px; }
+  @media (max-width: 560px) {
+    .share { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px; }
+    .share .qr { width: 116px; height: 116px; }
+  }
   .card {
     background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px;
     box-shadow: 0 12px 30px -28px rgba(15, 23, 42, .55);
@@ -205,6 +224,16 @@
       <div class="hol-list" id="holList"></div>
     </div>
   </div>
+
+  <section class="share">
+    <img class="qr" src="qrcode.png" alt="扫码打开上二休三休息日历">
+    <div class="share-txt">
+      <h2>手机 / 微信扫码打开</h2>
+      <p>链接：<a href="https://wangyanweiie.github.io/rest-calendar/">wangyanweiie.github.io/rest-calendar</a></p>
+      <p class="share-hint">微信里点右上角「···」→「在 Safari 中打开」，导出 .ics、翻页更完整；<br>
+        Safari 中「分享 → 添加到主屏幕」，以后像 App 一样点开。</p>
+    </div>
+  </section>
 
   <footer>
     节假日依据：国务院办公厅《关于 2026 年部分节假日安排的通知》（国办发明电〔2025〕7 号）与《关于 2027 年部分节假日安排的通知》（2026-11-05）——
