@@ -2,6 +2,9 @@
 
 **当前状态：已部署 ✅**
 
+> ⚠️ 补充：Gitee Pages 已停止服务（个人版入口已下线），Gitee 仅作代码镜像，不能再托管网页。
+> 国内访问请用 Cloudflare Pages / Netlify / EdgeOne Pages，详见 [MIRROR.md](MIRROR.md)。
+
 - 仓库：<https://github.com/wangyanweiie/rest-calendar>
 - 线上地址：<https://wangyanweiie.github.io/rest-calendar/>
 - Pages 源：`main` 分支 / 根目录，每次 `git push` 后约 1 分钟自动重新发布
