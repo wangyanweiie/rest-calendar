@@ -100,7 +100,7 @@
   .pill.red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
   .pill.gold { background: #fffbeb; color: #92400e; border-color: #fde68a; }
   .pill.dark { background: #1e293b; color: #fff; }
-  .pill.note { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+  .pill.note { background: #ecfdf5; color: #15803d; border-color: #86efac; }
   .detail .d-note { color: #94a3b8; font-size: 12px; }
 
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
@@ -505,17 +505,17 @@
     .sw-work { background: #fff; }
     .sw-holiday { background: var(--rc-gold-soft); border-color: #fcd34d; }
     .sw-makeup { background: #1e293b; border-color: #1e293b; }
-    .sw-note { background: #fff7ed; border-color: #fb923c; }
+    .sw-note { background: #ecfdf5; border-color: #22c55e; }
 
     /* ---- 备注 ---- */
-    .cell.has-note { box-shadow: inset 0 0 0 2px #fb923c; }
+    .cell.has-note { box-shadow: inset 0 0 0 2px #22c55e; }
     .cell.is-rest.is-weekend.has-note {
-      box-shadow: inset 0 0 0 2px #fed7aa, 0 10px 20px -14px rgba(220, 38, 38, .9);
+      box-shadow: inset 0 0 0 2px #bbf7d0, 0 10px 20px -14px rgba(220, 38, 38, .9);
     }
     .note-text {
       flex: 1 1 auto; min-width: 0; margin-left: 4px;
       font-size: 9.5px; line-height: 1.25; font-weight: 700; text-align: left;
-      color: #c2410c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: #15803d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .cell.is-rest.is-weekend .note-text { color: #fff; opacity: .95; }
 
@@ -539,7 +539,7 @@
       border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
       font: inherit; font-size: 13px; color: #0f172a; outline: none;
     }
-    .note-input:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px #dbeafe; }
+    .note-input:focus { border-color: #86efac; box-shadow: 0 0 0 3px #dcfce7; }
     .note-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
     .note-btn {
       font: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 14px;
@@ -547,8 +547,8 @@
       cursor: pointer; transition: background .15s, border-color .15s, color .15s;
     }
     .note-btn:hover { background: #f8fafc; }
-    .note-btn.primary { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
-    .note-btn.primary:hover { background: #1d3f9e; }
+    .note-btn.primary { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .note-btn.primary:hover { background: #15803d; }
     .note-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
     .note-btn.danger.confirming { background: #dc2626; border-color: #dc2626; color: #fff; }
     .note-btn[hidden] { display: none; }
