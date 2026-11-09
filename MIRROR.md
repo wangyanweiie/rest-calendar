@@ -3,7 +3,9 @@
 > **结论先说**：Gitee Pages 已经**停止服务**（个人版入口已从「服务」菜单移除，官方 issue 明确写着「功能已下线」），
 > 所以 Gitee 只能用来**存代码**，没法再托管网页。国内能跑静态站的免费方案见下面。
 
-当前线上（GitHub Pages）：<https://wangyanweiie.github.io/rest-calendar/>
+当前线上：
+- **主地址（Netlify，微信推荐）**：<https://chimerical-heliotrope-4c52ff.netlify.app/>
+- 备用（GitHub Pages）：<https://wangyanweiie.github.io/rest-calendar/>
 Gitee 代码镜像：<https://gitee.com/wangyanweiie/rest-calendar>
 
 ---
@@ -44,7 +46,13 @@ git push gitee main
 
 实测本机访问 `pages.dev` 约 1.1s，微信内置浏览器可正常打开。
 
-### 方案 B：Netlify（最快，30 秒）
+### ✅ 方案 B：Netlify（已采用）
+
+> 已用 Netlify Drop 部署：<https://chimerical-heliotrope-4c52ff.netlify.app/>
+>
+> ⚠️ Drop 部署是**静态快照**，之后改代码不会自动更新。要自动部署：Site settings →
+> Build & deploy → **Link repository** → 选 `wangyanweiie/rest-calendar`，构建命令留空、发布目录 `/`。
+> 未接仓库前，每次更新需要重新拖一次文件夹。
 
 免费、免实名、免备案。两种方式：
 
