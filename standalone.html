@@ -870,8 +870,8 @@
             (info.isStatutory ? '节' : '假') + '</span></span>';
         }
         var state = !info.inRange ? '' : (info.isWork ? '班' : '休');
-        var noteRaw = info.inRange && info.note ? info.note : '';
-        if (noteRaw && self._narrow && noteRaw.length > 2) noteRaw = noteRaw.slice(0, 2) + '…';
+        /* 移动端格子内不展示备注文字（保留绿色描边标记，内容看下方详情条） */
+        var noteRaw = info.inRange && info.note && !self._narrow ? info.note : '';
         var noteText = noteRaw ? escapeHTML(noteRaw) : '';
         var holName = info.inRange && info.holiday ? info.holiday.name : '';
         var label = info.weekdayLabel + ' ' + iso + ' · ' + (info.inRange ? (info.isWork ? '上班' : '休息') : '超出范围') +
