@@ -82,9 +82,9 @@ https://<你的用户名>.github.io/rest-calendar/
 ## 方式 C：Vercel / Netlify（同上，任选其一）
 
 - Vercel：<https://vercel.com/new> → Import Git Repository → Framework: Other → 直接 Deploy
-- Netlify：<https://app.netlify.com/start> → Import from Git → Build command 留空 → Publish directory `/`
+- Netlify：不要用 Import from Git（每次 push 都会部署并扣积分）。需要更新时，到仓库 Actions 页手动运行 **Deploy to Netlify**。
 
-Netlify 还支持直接把 `calendar` 文件夹拖进 <https://app.netlify.com/drop>，几秒出链接（免登录可试用）。
+也可以把项目文件夹拖进 <https://app.netlify.com/drop>，但那是一次性快照，同样消耗积分。
 
 ---
 

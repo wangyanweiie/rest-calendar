@@ -1,8 +1,8 @@
 name: Deploy to Netlify
 
+# 只手动跑。push 到 main 不再部署，避免每次提交消耗 Netlify 积分。
+# Actions → Deploy to Netlify → Run workflow
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:

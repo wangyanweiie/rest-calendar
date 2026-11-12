@@ -101,6 +101,7 @@
   .pill.gold { background: #fffbeb; color: #92400e; border-color: #fde68a; }
   .pill.dark { background: #1e293b; color: #fff; }
   .pill.note { background: #ecfdf5; color: #15803d; border-color: #86efac; }
+  .pill.ot { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
   .detail .d-note { color: #94a3b8; font-size: 12px; }
 
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
@@ -193,7 +194,7 @@
     <p class="sub">
       排班规则：每 5 天循环「上班 2 天 → 休息 3 天」。休息日若落在周六 / 周日 <b style="color:#ef4444">标红</b>，
       并额外标注<b style="color:#b45309">法定节假日</b>与<b>调休上班</b>日。
-      <b>长按日期</b>可添加/删除备注。
+      <b>长按或双击日期</b>可写备注，并用开关标注加班（当天变为橙色）。
     </p>
   </header>
 
@@ -271,6 +272,7 @@
  *   getSummary()     统计
  *   setHolidays(map) 注入自定义节假日
  *   getNote(iso) / setNote(iso, text) / removeNote(iso) / getNotes()  日期备注（localStorage）
+ *   isOvertime(iso) / setOvertime(iso, on) / setDayMark(iso, text, on) / clearDayMark(iso)  加班标记
  *   setRange(start, end)
  *   goToMonth(y, m)
  *   buildICS()       生成 .ics 文本
@@ -450,6 +452,9 @@
       letter-spacing: .04em; white-space: nowrap; flex: 0 1 auto;
       overflow: hidden; text-overflow: ellipsis;
     }
+    .tags { display: flex; align-items: center; justify-content: flex-end; gap: 3px; min-width: 0; }
+    .tag-ot { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+    .cell.is-overtime .tag-ot { background: rgba(255, 255, 255, .94); color: #c2410c; border-color: transparent; }
     .tag-holiday { background: var(--rc-gold-soft); color: var(--rc-gold); border: 1px solid #fcd34d; }
     .tag-holiday .tag-s { display: none; }
     .tag-makeup { background: #1e293b; color: #fff; }
@@ -486,6 +491,27 @@
     .cell.is-rest.is-weekend .hol-name { color: #fff; }
     .cell.is-rest.is-weekend .tag-holiday { background: #fff7ed; color: #b91c1c; border-color: #fecaca; }
 
+    /* 手动标注的加班：整格橙色，盖过上班 / 休息 / 周末红 */
+    .cell.is-work.is-overtime,
+    .cell.is-rest.is-overtime,
+    .cell.is-rest.is-weekend.is-overtime {
+      background: linear-gradient(160deg, #fb923c 0%, #f97316 52%, #ea580c 100%);
+      border-color: #c2410c;
+      box-shadow: 0 10px 20px -14px rgba(234, 88, 12, .9);
+    }
+    .cell.is-work.is-overtime .num,
+    .cell.is-rest.is-overtime .num,
+    .cell.is-rest.is-weekend.is-overtime .num { color: #fff; }
+    .cell.is-work.is-overtime .chip,
+    .cell.is-rest.is-overtime .chip,
+    .cell.is-rest.is-weekend.is-overtime .chip { background: rgba(255, 255, 255, .92); color: #c2410c; }
+    .cell.is-work.is-overtime .hol-name,
+    .cell.is-rest.is-overtime .hol-name,
+    .cell.is-rest.is-weekend.is-overtime .hol-name { color: #fff; }
+    .cell.is-overtime .tag-holiday,
+    .cell.is-rest.is-weekend.is-overtime .tag-holiday { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+    .cell.is-overtime .tag-makeup { background: #431407; color: #fff; }
+
     .cell .hol-name { color: var(--rc-gold); }
     .cell.is-weekend:not(.is-rest) .hol-name { color: var(--rc-gold); }
 
@@ -506,6 +532,7 @@
     .sw-work { background: #fff; }
     .sw-holiday { background: var(--rc-gold-soft); border-color: #fcd34d; }
     .sw-makeup { background: #1e293b; border-color: #1e293b; }
+    .sw-ot { background: linear-gradient(160deg, #fb923c, #ea580c); border-color: #c2410c; }
     .sw-note { background: #ecfdf5; border-color: #22c55e; }
 
     /* ---- 备注 ---- */
@@ -513,6 +540,12 @@
     .cell.is-rest.is-weekend.has-note {
       box-shadow: inset 0 0 0 2px #bbf7d0, 0 10px 20px -14px rgba(220, 38, 38, .9);
     }
+    .cell.is-overtime.has-note,
+    .cell.is-rest.is-weekend.is-overtime.has-note {
+      box-shadow: inset 0 0 0 2px #bbf7d0, 0 10px 20px -14px rgba(234, 88, 12, .9);
+    }
+    .cell.is-overtime .note-text,
+    .cell.is-rest.is-weekend.is-overtime .note-text { color: #fff; }
     .note-text {
       flex: 1 1 auto; min-width: 0; margin-left: 4px;
       font-size: 9.5px; line-height: 1.25; font-weight: 700; text-align: left;
@@ -540,7 +573,25 @@
       border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
       font: inherit; font-size: 16px; color: #0f172a; outline: none;
     }
-    .note-input:focus { border-color: #86efac; box-shadow: 0 0 0 3px #dcfce7; }
+    .note-input:focus { border-color: var(--rc-brand); box-shadow: 0 0 0 3px rgba(30, 58, 138, .16); }
+    .ot-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 10px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 10px;
+    }
+    .ot-name { display: block; font-size: 13px; font-weight: 700; color: #0f172a; }
+    .ot-hint { display: block; margin-top: 2px; font-size: 11px; color: #94a3b8; }
+    .ot-switch {
+      position: relative; flex: 0 0 auto; width: 44px; height: 26px; padding: 0;
+      border: 0; border-radius: 999px; background: #e2e8f0; cursor: pointer;
+    }
+    .ot-switch::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+      border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .25);
+      transition: transform .15s ease;
+    }
+    .ot-switch[aria-checked="true"] { background: #f97316; }
+    .ot-switch[aria-checked="true"]::after { transform: translateX(18px); }
+    .ot-switch:focus-visible { outline: 2px solid var(--rc-brand); outline-offset: 2px; }
     .note-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
     .note-btn {
       font: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 14px;
@@ -548,8 +599,8 @@
       cursor: pointer; transition: background .15s, border-color .15s, color .15s;
     }
     .note-btn:hover { background: #f8fafc; }
-    .note-btn.primary { background: #16a34a; border-color: #16a34a; color: #fff; }
-    .note-btn.primary:hover { background: #15803d; }
+    .note-btn.primary { background: var(--rc-brand); border-color: var(--rc-brand); color: #fff; }
+    .note-btn.primary:hover { background: #1d3f9e; }
     .note-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
     .note-btn.danger.confirming { background: #dc2626; border-color: #dc2626; color: #fff; }
     .note-btn[hidden] { display: none; }
@@ -664,31 +715,78 @@
       try { localStorage.setItem(this.storageKey, JSON.stringify(this._notes)); } catch (e) {}
     }
 
-    getNote(iso) { this._loadNotes(); return this._notes[iso] || ''; }
-    getNotes() { this._loadNotes(); return Object.assign({}, this._notes); }
+    /* 旧数据是纯字符串；带加班标记时写成 { n, ot }，只有备注时仍存字符串 */
+    _entry(iso) {
+      var v = this._notes[iso];
+      if (!v) return { note: '', overtime: false };
+      if (typeof v === 'string') return { note: v, overtime: false };
+      if (typeof v === 'object') {
+        return {
+          note: String(v.n != null ? v.n : (v.note || '')),
+          overtime: !!(v.ot || v.overtime)
+        };
+      }
+      return { note: '', overtime: false };
+    }
+
+    _emitMark(iso, note, overtime) {
+      this._render();
+      this.dispatchEvent(new CustomEvent('notes-changed', {
+        detail: { iso: iso, note: note, overtime: !!overtime, notes: this.getNotes() },
+        bubbles: true, composed: true
+      }));
+    }
+
+    _writeMark(iso, note, overtime) {
+      this._loadNotes();
+      var text = String(note == null ? '' : note).trim();
+      var ot = !!overtime;
+      if (!text && !ot) delete this._notes[iso];
+      else if (!ot) this._notes[iso] = text;
+      else this._notes[iso] = text ? { n: text, ot: 1 } : { ot: 1 };
+      this._saveNotes();
+      this._emitMark(iso, text, ot);
+      return text;
+    }
+
+    getNote(iso) { this._loadNotes(); return this._entry(iso).note; }
+    isOvertime(iso) { this._loadNotes(); return this._entry(iso).overtime; }
+    getNotes() {
+      this._loadNotes();
+      var out = {}, self = this;
+      Object.keys(this._notes).forEach(function (k) {
+        var e = self._entry(k);
+        if (e.note) out[k] = e.note;
+      });
+      return out;
+    }
 
     setNote(iso, text) {
       var v = String(text == null ? '' : text).trim();
-      if (!v) { this.removeNote(iso); return ''; }
-      this._loadNotes();
-      this._notes[iso] = v;
-      this._saveNotes();
-      this._render();
-      this.dispatchEvent(new CustomEvent('notes-changed', {
-        detail: { iso: iso, note: v, notes: this.getNotes() }, bubbles: true, composed: true
-      }));
-      return v;
+      if (!v && !this.getNote(iso)) return '';
+      return this._writeMark(iso, v, this.isOvertime(iso));
+    }
+
+    setOvertime(iso, on) {
+      this._writeMark(iso, this.getNote(iso), !!on);
+      return !!on;
+    }
+
+    setDayMark(iso, text, overtime) {
+      return this._writeMark(iso, text, overtime);
     }
 
     removeNote(iso) {
       this._loadNotes();
+      var e = this._entry(iso);
+      if (!e.note) return;
+      this._writeMark(iso, '', e.overtime);
+    }
+
+    clearDayMark(iso) {
+      this._loadNotes();
       if (!this._notes[iso]) return;
-      delete this._notes[iso];
-      this._saveNotes();
-      this._render();
-      this.dispatchEvent(new CustomEvent('notes-changed', {
-        detail: { iso: iso, note: '', notes: this.getNotes() }, bubbles: true, composed: true
-      }));
+      this._writeMark(iso, '', false);
     }
 
     /* ---------- 数据 ---------- */
@@ -719,6 +817,7 @@
         isStatutory: !!holiday && holiday.type === 'statutory',
         makeup: makeup,
         note: this.getNote(iso),
+        overtime: this.isOvertime(iso),
         inRange: dt >= startDt && dt <= endDt
       };
     }
@@ -860,12 +959,14 @@
         else cls.push(info.isWork ? 'is-work' : 'is-rest');
         if (info.isRest && info.weekend && info.inRange) cls.push('is-weekend');
         if (iso === todayISO) cls.push('is-today');
+        if (info.inRange && info.overtime) cls.push('is-overtime');
         if (info.inRange && info.note) cls.push('has-note');
 
-        var tag = '';
+        var tags = '';
+        if (info.inRange && info.overtime) tags += '<span class="tag tag-ot">加</span>';
         if (info.inRange) {
-          if (info.makeup) tag = '<span class="tag tag-makeup">调</span>';
-          else if (info.holiday) tag = '<span class="tag tag-holiday"><span class="tag-l">' +
+          if (info.makeup) tags += '<span class="tag tag-makeup">调</span>';
+          else if (info.holiday) tags += '<span class="tag tag-holiday"><span class="tag-l">' +
             (info.isStatutory ? '法定' : '假日') + '</span><span class="tag-s">' +
             (info.isStatutory ? '节' : '假') + '</span></span>';
         }
@@ -878,10 +979,12 @@
           (info.holiday ? ' · ' + info.holiday.name + (info.isStatutory ? '（法定节假日）' : '（假期）') : '') +
           (info.makeup ? ' · ' + info.makeup + ' 上班' : '') +
           (info.restOnWeekend ? ' · 与周末重合' : '') +
+          (info.overtime ? ' · 加班' : '') +
           (info.note ? ' · 备注：' + info.note : '');
 
         return '<button class="' + cls.join(' ') + '" data-iso="' + iso + '" type="button" aria-label="' + label + '" title="' + label + '">' +
-          '<div class="row-top"><span class="num">' + info.day + '</span>' + tag + '</div>' +
+          '<div class="row-top"><span class="num">' + info.day + '</span>' +
+          (tags ? '<span class="tags">' + tags + '</span>' : '') + '</div>' +
           '<div class="row-bot">' + (state ? '<span class="chip">' + state + '</span>' : '') +
           (noteText ? '<span class="note-text">' + noteText + '</span>' : '') +
           (holName ? '<span class="hol-name">' + holName + '</span>' : '') + '</div>' +
@@ -908,11 +1011,16 @@
             '<span class="legend-item"><span class="swatch sw-red"></span>休息日与周末重合（标红）</span>' +
             '<span class="legend-item"><span class="swatch sw-holiday"></span>法定节假日</span>' +
             '<span class="legend-item"><span class="swatch sw-makeup"></span>调休上班</span>' +
+            '<span class="legend-item"><span class="swatch sw-ot"></span>加班</span>' +
             '<span class="legend-item"><span class="swatch sw-note"></span>有备注</span>' +
           '</div>' +
           '<div class="note-mask" hidden>' +
             '<div class="note-card" role="dialog" aria-modal="true">' +
               '<div class="note-head"><span class="note-title"></span><span class="note-sub"></span></div>' +
+              '<div class="ot-row">' +
+                '<div><span class="ot-name">加班</span><span class="ot-hint">打开后这一天标成橙色</span></div>' +
+                '<button class="ot-switch" type="button" role="switch" aria-checked="false" aria-label="标注加班"></button>' +
+              '</div>' +
               '<textarea class="note-input" rows="3" placeholder="例如：调休、换班、请假…"></textarea>' +
               '<div class="note-actions">' +
                 '<button class="note-btn danger" type="button" data-act="del" hidden>删除</button>' +
@@ -941,7 +1049,15 @@
       var noteTitle = root.querySelector('.note-title');
       var noteSub = root.querySelector('.note-sub');
       var delBtn = root.querySelector('[data-act="del"]');
+      var otSwitch = root.querySelector('.ot-switch');
       var confirming = false;
+
+      function setOt(on) {
+        if (otSwitch) otSwitch.setAttribute('aria-checked', on ? 'true' : 'false');
+      }
+      function otOn() {
+        return !!(otSwitch && otSwitch.getAttribute('aria-checked') === 'true');
+      }
 
       function resetDelete() {
         confirming = false;
@@ -967,7 +1083,8 @@
         noteTitle.textContent = iso + ' · ' + info.weekdayLabel;
         noteSub.textContent = info.isWork ? '上班日' : '休息日';
         noteInput.value = info.note || '';
-        delBtn.hidden = !info.note;
+        setOt(!!info.overtime);
+        delBtn.hidden = !(info.note || info.overtime);
         resetDelete();
         mask.hidden = false;
         setTimeout(function () { try { noteInput.focus(); } catch (e) {} }, 30);
@@ -975,6 +1092,7 @@
 
       if (mask) {
         root.querySelector('[data-act="cancel"]').addEventListener('click', closeNote);
+        if (otSwitch) otSwitch.addEventListener('click', function () { setOt(!otOn()); resetDelete(); });
         mask.addEventListener('click', function (e) { if (e.target === mask) closeNote(); });
         document.addEventListener('keydown', function (e) {
           if (!mask.hidden && e.key === 'Escape') closeNote();
@@ -990,14 +1108,16 @@
             return;
           }
           closeNote();
-          self.removeNote(iso);
+          self.clearDayMark(iso);
         });
 
         root.querySelector('[data-act="save"]').addEventListener('click', function () {
           var iso = self._activeNote;
           if (!iso) return;
           var val = noteInput.value.trim();
-          if (!val && self.getNote(iso)) {   /* 清空已有备注 = 删除，需二次确认 */
+          var ot = otOn();
+          var had = !!(self.getNote(iso) || self.isOvertime(iso));
+          if (!val && !ot && had) {   /* 备注和加班都清空 = 删除，需二次确认 */
             if (!confirming) {
               confirming = true;
               delBtn.hidden = false;
@@ -1006,16 +1126,16 @@
               return;
             }
             closeNote();
-            self.removeNote(iso);
+            self.clearDayMark(iso);
             return;
           }
-          if (!val) { closeNote(); return; }
+          if (!val && !ot) { closeNote(); return; }
           closeNote();
-          self.setNote(iso, val);
+          self.setDayMark(iso, val, ot);
         });
       }
 
-      /* ---- 长按 550ms 打开备注；右键同样打开 ---- */
+      /* ---- 长按 550ms / 双击 / 右键 打开备注与加班 ---- */
       root.querySelectorAll('.cell[data-iso]').forEach(function (cell) {
         var iso = cell.getAttribute('data-iso');
         var pressTimer = null;
@@ -1042,6 +1162,13 @@
         cell.addEventListener('contextmenu', function (e) {
           if (!self.notesEnabled) return;
           e.preventDefault();
+          cancelPress();
+          openNote(iso);
+        });
+        cell.addEventListener('dblclick', function (e) {
+          if (!self.notesEnabled) return;
+          e.preventDefault();
+          cancelPress();
           openNote(iso);
         });
 
@@ -1068,6 +1195,7 @@
         if (d.isRest) summary = d.restOnWeekend ? '休息（与周末重合）' : '休息';
         if (d.holiday) summary = (summary ? summary : '上班') + ' · ' + d.holiday.name;
         if (d.makeup) summary = '调休上班 · ' + d.makeup;
+        if (d.overtime) summary = (summary ? summary + ' · ' : '') + '加班';
         if (!summary) return;
         var s = d.iso.replace(/-/g, '');
         var e = toISO(addDays(parseISO(d.iso), 1)).replace(/-/g, '');
@@ -1086,7 +1214,6 @@
     window.RestCalendarData = { holidays: DEFAULT_HOLIDAYS, makeup: DEFAULT_MAKEUP, spans: DEFAULT_SPANS };
   }
 })();
-
 </script>
 <script>
 (function () {
@@ -1209,6 +1336,7 @@
       pills.push('<span class="pill gold">' + d.holiday.name + (d.isStatutory ? ' · 法定节假日' : ' · 假期（调休）') + '</span>');
     }
     if (d.makeup) pills.push('<span class="pill dark">' + d.makeup + ' 上班</span>');
+    if (d.overtime) pills.push('<span class="pill ot">加班</span>');
     if (d.note) {
       var safe = String(d.note).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];

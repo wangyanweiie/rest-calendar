@@ -101,6 +101,7 @@
   .pill.gold { background: #fffbeb; color: #92400e; border-color: #fde68a; }
   .pill.dark { background: #1e293b; color: #fff; }
   .pill.note { background: #ecfdf5; color: #15803d; border-color: #86efac; }
+  .pill.ot { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
   .detail .d-note { color: #94a3b8; font-size: 12px; }
 
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
@@ -193,7 +194,7 @@
     <p class="sub">
       排班规则：每 5 天循环「上班 2 天 → 休息 3 天」。休息日若落在周六 / 周日 <b style="color:#ef4444">标红</b>，
       并额外标注<b style="color:#b45309">法定节假日</b>与<b>调休上班</b>日。
-      <b>长按日期</b>可添加/删除备注。
+      <b>长按或双击日期</b>可写备注，并用开关标注加班（当天变为橙色）。
     </p>
   </header>
 
@@ -367,6 +368,7 @@
       pills.push('<span class="pill gold">' + d.holiday.name + (d.isStatutory ? ' · 法定节假日' : ' · 假期（调休）') + '</span>');
     }
     if (d.makeup) pills.push('<span class="pill dark">' + d.makeup + ' 上班</span>');
+    if (d.overtime) pills.push('<span class="pill ot">加班</span>');
     if (d.note) {
       var safe = String(d.note).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];

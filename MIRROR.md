@@ -50,14 +50,13 @@ git push gitee main
 
 > 已用 Netlify Drop 部署：<https://rest-calendar.netlify.app/>
 >
-> ⚠️ Drop 部署是**静态快照**，之后改代码不会自动更新。要自动部署：Site settings →
-> Build & deploy → **Link repository** → 选 `wangyanweiie/rest-calendar`，构建命令留空、发布目录 `/`。
-> 未接仓库前，每次更新需要重新拖一次文件夹。
+> 更新线上时**不要**在 Netlify 后台 Link repository。连上之后每次 `git push` 都会自动部署，一次约 15 积分。
+> 需要发布时，打开 GitHub → Actions → **Deploy to Netlify** → **Run workflow**。
 
-免费、免实名、免备案。两种方式：
+免费、免实名、免备案。发布方式：
 
-- **拖拽**：打开 <https://app.netlify.com/drop>，把 `calendar` 文件夹拖进去，立刻出链接
-- **连仓库**：Import from Git → 选 GitHub 仓库 → Build command 留空 → Publish directory `/`
+- **手动**：GitHub Actions 里运行 `Deploy to Netlify`（仓库需配置 `NETLIFY_AUTH_TOKEN`、`NETLIFY_SITE_ID`）
+- **拖拽**：打开 <https://app.netlify.com/drop>，把项目文件夹拖进去（同样会扣积分，且不会跟随后续提交）
 
 域名形如 `https://xxx.netlify.app`，国内一般可访问。
 
@@ -89,7 +88,7 @@ git push gitee main
 | --- | --- | --- | --- | --- |
 | 费用 | 免费 | 免费 | 免费额度 | 免费 |
 | 实名/备案 | 都不需要 | 都不需要 | 需腾讯云实名 | 不需要 |
-| 自动部署 | ✅ | ✅ | ✅ | ✅ |
+| 自动部署 | ✅ | 手动 | ✅ | ✅ |
 | 国内速度 | 中上 | 中 | 最快 | 差 |
 | 微信里打开 | 多数可以 | 一般可以 | 可以 | 经常不行 |
 
