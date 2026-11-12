@@ -29,6 +29,7 @@ const notice = ref('');
 const noticeError = ref(false);
 const calendarRef = ref<{
   goToMonth: (year: number, month: number) => void;
+  openDialog: (iso: string) => void;
 } | null>(null);
 
 const schedule = computed(() => ({
@@ -203,7 +204,7 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
       <p class="sub">
         排班规则：每 5 天循环「上班 2 天 → 休息 3 天」。休息日若落在周六 / 周日
         <b style="color: #ef4444">标红</b>， 并额外标注<b style="color: #b45309">法定节假日</b>与<b>调休上班</b>日。 每一天显示农历。
-        <b>长按或双击日期</b>可写备注，并用开关标注见面、加班或请假。这三个标记只加角标，不盖住休息日原来的颜色。记录保存在这台浏览器里。
+        <b>点日期后再点「标注」</b>可写备注，并用开关标注见面、加班或请假。电脑上也可以双击或右键日期。这三个标记只加角标，不盖住休息日原来的颜色。记录保存在这台浏览器里。
       </p>
     </header>
 
@@ -293,8 +294,11 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
             · 官方调休上班，与上二休三休息日冲突
           </template>
         </span>
+        <button class="detail__edit" type="button" @click="calendarRef?.openDialog(selected.iso)">
+          标注
+        </button>
       </template>
-      <span v-else class="detail-hint">点击任意日期查看当天详情</span>
+      <span v-else class="detail-hint">点击日期查看详情，再点「标注」写备注</span>
     </div>
 
     <div class="cols">

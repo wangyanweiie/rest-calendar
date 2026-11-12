@@ -268,6 +268,34 @@ h1 {
   color: #94a3b8;
   font-size: 12px;
 }
+.detail__edit {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.detail__edit:hover {
+  background: #1d3f9e;
+}
+@media (max-width: 640px) {
+  .detail:has(.detail__edit) {
+    position: relative;
+    padding-right: 76px;
+  }
+  .detail__edit {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    margin-left: 0;
+    transform: translateY(-50%);
+  }
+}
 .birthdays {
   margin-top: 14px;
   background: #fff;

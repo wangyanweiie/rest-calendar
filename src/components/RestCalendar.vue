@@ -171,7 +171,7 @@ onMounted(() => {
 
 onUnmounted(() => window.removeEventListener('resize', syncCompact));
 
-defineExpose({ goToMonth });
+defineExpose({ goToMonth, openDialog });
 </script>
 
 <template>

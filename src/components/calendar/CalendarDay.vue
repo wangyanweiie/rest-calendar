@@ -24,7 +24,7 @@ const emit = defineEmits<{
    */
   select: [info: DayInfo];
   /**
-   * 长按、双击或右键：让父组件打开编辑弹窗
+   * 双击或右键：让父组件打开编辑弹窗
    */
   edit: [iso: string];
 }>();
@@ -66,17 +66,28 @@ function clearPress() {
 }
 
 /**
- * 按下后开始计时；鼠标右键不触发长按
+ * 只有鼠标左键长按才打开编辑，触摸长按留给系统
  */
 function onPointerDown(event: PointerEvent) {
   if (!props.info.inRange) return;
-  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  if (event.pointerType !== 'mouse' || event.button !== 0) return;
   clearPress();
   pressTimer = window.setTimeout(() => {
     pressTimer = null;
     suppressClick = true;
     emit('edit', props.info.iso);
   }, LONG_PRESS_MS);
+}
+
+/**
+ * 右键打开编辑。触摸长按只阻止系统选字
+ */
+function onContextMenu(event: Event) {
+  event.preventDefault();
+  if (!props.info.inRange) return;
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+  clearPress();
+  emit('edit', props.info.iso);
 }
 
 function onClick() {
@@ -132,7 +143,7 @@ function holidayLabel(info: DayInfo): string {
     @pointerup="clearPress"
     @pointerleave="clearPress"
     @pointercancel="clearPress"
-    @contextmenu.prevent="onEdit"
+    @contextmenu="onContextMenu"
     @dblclick.prevent="onEdit"
     @click="onClick"
   >
@@ -208,6 +219,9 @@ function holidayLabel(info: DayInfo): string {
   cursor: pointer;
   overflow: hidden;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 
   &:hover {
     transform: translateY(-1px);
