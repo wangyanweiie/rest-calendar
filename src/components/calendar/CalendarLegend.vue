@@ -13,7 +13,7 @@ const items = [
   { name: 'leave', label: '请假' },
   { name: 'solar', label: '公历生日' },
   { name: 'lunar', label: '农历生日' },
-]
+];
 </script>
 
 <template>
@@ -49,16 +49,45 @@ const items = [
     border-radius: 4px;
     border: 1px solid var(--rc-line);
 
-    &--work { background: #fff; }
-    &--rest { background: var(--rc-rest); border-color: #cfdffb; }
-    &--weekend { background: linear-gradient(160deg, #f43f5e, #dc2626); border-color: #dc2626; }
-    &--holiday { background: var(--rc-gold-soft); border-color: #fcd34d; }
-    &--makeup { background: #1e293b; border-color: #1e293b; }
-    &--meeting { background: #dcfce7; border-color: #86efac; }
-    &--overtime { background: #fff7ed; border-color: #fdba74; }
-    &--leave { background: #f3f4f6; border-color: #d1d5db; }
-    &--solar { background: #fdf2f8; border-color: #f9a8d4; }
-    &--lunar { background: #eef2ff; border-color: #818cf8; }
+    &--work {
+      background: #fff;
+    }
+    &--rest {
+      background: var(--rc-rest);
+      border-color: #cfdffb;
+    }
+    &--weekend {
+      background: linear-gradient(160deg, #f43f5e, #dc2626);
+      border-color: #dc2626;
+    }
+    &--holiday {
+      background: var(--rc-gold-soft);
+      border-color: #fcd34d;
+    }
+    &--makeup {
+      background: #1e293b;
+      border-color: #1e293b;
+    }
+    &--meeting {
+      background: #dcfce7;
+      border-color: #86efac;
+    }
+    &--overtime {
+      background: #4c1d95;
+      border-color: #4c1d95;
+    }
+    &--leave {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    &--solar {
+      background: #fdf2f8;
+      border-color: #f9a8d4;
+    }
+    &--lunar {
+      background: #eef2ff;
+      border-color: #818cf8;
+    }
   }
 }
 </style>

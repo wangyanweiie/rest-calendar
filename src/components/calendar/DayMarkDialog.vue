@@ -1,108 +1,112 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import type { DayInfo } from '../../lib/schedule'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { DayInfo } from '../../lib/schedule';
 
 interface Props {
   /**
    * 正在编辑的日期。null 表示关闭，有值时用它初始化备注和开关
    */
-  day: DayInfo | null
+  day: DayInfo | null;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   /**
    * 取消，或点遮罩、按 Esc。不改已保存的数据
    */
-  close: []
+  close: [];
   /**
    * 保存草稿。note 已去掉首尾空格
    */
-  save: [note: string, overtime: boolean, meeting: boolean, leave: boolean]
+  save: [note: string, overtime: boolean, meeting: boolean, leave: boolean];
   /**
    * 备注和三个开关都清空，父组件删除这一天的记录
    */
-  clear: []
-}>()
+  clear: [];
+}>();
 
-const draftNote = ref('')
+const draftNote = ref('');
 /**
  * 见面开关草稿
  */
-const draftMeeting = ref(false)
+const draftMeeting = ref(false);
 /**
  * 加班开关草稿
  */
-const draftOvertime = ref(false)
+const draftOvertime = ref(false);
 /**
  * 请假开关草稿
  */
-const draftLeave = ref(false)
+const draftLeave = ref(false);
 /**
  * 第一次点删除或清空保存时先变成确认，再点一次才真正清除
  */
-const confirming = ref(false)
-const noteInput = ref<HTMLTextAreaElement | null>(null)
+const confirming = ref(false);
+const noteInput = ref<HTMLTextAreaElement | null>(null);
 
-watch(() => props.day, (day) => {
-  if (!day) return
-  draftNote.value = day.note
-  draftMeeting.value = day.meeting
-  draftOvertime.value = day.overtime
-  draftLeave.value = day.leave
-  confirming.value = false
-  void nextTick(() => noteInput.value?.focus())
-}, { immediate: true })
+watch(
+  () => props.day,
+  (day) => {
+    if (!day) return;
+    draftNote.value = day.note;
+    draftMeeting.value = day.meeting;
+    draftOvertime.value = day.overtime;
+    draftLeave.value = day.leave;
+    confirming.value = false;
+    void nextTick(() => noteInput.value?.focus());
+  },
+  { immediate: true },
+);
 
 function close() {
-  noteInput.value?.blur()
-  emit('close')
+  noteInput.value?.blur();
+  emit('close');
 }
 
 /**
  * 草稿里是否打开了见面、加班或请假
  */
 function draftFlags(): boolean {
-  return draftMeeting.value || draftOvertime.value || draftLeave.value
+  return draftMeeting.value || draftOvertime.value || draftLeave.value;
 }
 
 /**
  * 没有备注也没有开关时，已有记录需要再确认一次才删除
  */
 function onSave() {
-  if (!props.day) return
-  const note = draftNote.value.trim()
-  const had = !!(props.day.note || props.day.meeting || props.day.overtime || props.day.leave)
+  if (!props.day) return;
+  const note = draftNote.value.trim();
+  const had = !!(props.day.note || props.day.meeting || props.day.overtime || props.day.leave);
   if (!note && !draftFlags() && had) {
     if (!confirming.value) {
-      confirming.value = true
-      return
+      confirming.value = true;
+      return;
     }
-    emit('clear')
-    return
+    emit('clear');
+    return;
   }
   if (!note && !draftFlags()) {
-    close()
-    return
+    close();
+    return;
   }
-  emit('save', note, draftOvertime.value, draftMeeting.value, draftLeave.value)
+  emit('save', note, draftOvertime.value, draftMeeting.value, draftLeave.value);
 }
 
 function onDelete() {
   if (!confirming.value) {
-    confirming.value = true
-    return
+    confirming.value = true;
+    return;
   }
-  emit('clear')
+  emit('clear');
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (props.day && event.key === 'Escape') close()
+  if (props.day && event.key === 'Escape') close();
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
@@ -123,7 +127,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           role="switch"
           :aria-checked="draftMeeting"
           aria-label="标注见面"
-          @click="draftMeeting = !draftMeeting; confirming = false"
+          @click="
+            draftMeeting = !draftMeeting;
+            confirming = false;
+          "
         ></button>
       </div>
       <div class="dialog__row">
@@ -137,7 +144,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           role="switch"
           :aria-checked="draftOvertime"
           aria-label="标注加班"
-          @click="draftOvertime = !draftOvertime; confirming = false"
+          @click="
+            draftOvertime = !draftOvertime;
+            confirming = false;
+          "
         ></button>
       </div>
       <div class="dialog__row">
@@ -151,10 +161,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           role="switch"
           :aria-checked="draftLeave"
           aria-label="标注请假"
-          @click="draftLeave = !draftLeave; confirming = false"
+          @click="
+            draftLeave = !draftLeave;
+            confirming = false;
+          "
         ></button>
       </div>
-      <textarea ref="noteInput" v-model="draftNote" class="dialog__input" rows="3" placeholder="例如：换班、调休、补充说明…"></textarea>
+      <textarea
+        ref="noteInput"
+        v-model="draftNote"
+        class="dialog__input"
+        rows="3"
+        placeholder="例如：换班、调休、补充说明…"
+      ></textarea>
       <div class="dialog__actions">
         <button
           v-if="day.note || day.meeting || day.overtime || day.leave || confirming"
@@ -178,7 +197,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   inset: 0;
   z-index: 9999;
   padding: 20px;
-  background: rgba(15, 23, 42, .42);
+  background: rgba(15, 23, 42, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +207,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     background: #fff;
     border-radius: 16px;
     padding: 18px;
-    box-shadow: 0 24px 60px -20px rgba(15, 23, 42, .5);
+    box-shadow: 0 24px 60px -20px rgba(15, 23, 42, 0.5);
   }
 
   &__head {
@@ -199,8 +218,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     margin-bottom: 10px;
   }
 
-  &__title { font-size: 14px; font-weight: 700; }
-  &__meta { font-size: 11.5px; color: #94a3b8; white-space: nowrap; }
+  &__title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  &__meta {
+    font-size: 11.5px;
+    color: #94a3b8;
+    white-space: nowrap;
+  }
 
   &__row {
     display: flex;
@@ -213,8 +239,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     border-radius: 10px;
   }
 
-  &__label { display: block; font-size: 13px; font-weight: 700; }
-  &__hint { display: block; margin-top: 2px; font-size: 11px; color: #94a3b8; }
+  &__label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  &__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
 
   &__switch {
     position: relative;
@@ -228,7 +263,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     cursor: pointer;
 
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       top: 3px;
       left: 3px;
@@ -236,14 +271,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       height: 20px;
       border-radius: 50%;
       background: #fff;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, .25);
-      transition: transform .15s ease;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+      transition: transform 0.15s ease;
     }
 
-    &[aria-checked='true']::after { transform: translateX(18px); }
-    &--meeting[aria-checked='true'] { background: #16a34a; }
-    &--overtime[aria-checked='true'] { background: #f97316; }
-    &--leave[aria-checked='true'] { background: #64748b; }
+    &[aria-checked='true']::after {
+      transform: translateX(18px);
+    }
+    &--meeting[aria-checked='true'] {
+      background: #16a34a;
+    }
+    &--overtime[aria-checked='true'] {
+      background: #4c1d95;
+    }
+    &--leave[aria-checked='true'] {
+      background: #64748b;
+    }
   }
 
   &__input {
@@ -261,7 +304,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
     &:focus {
       border-color: var(--rc-brand);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, .16);
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.16);
     }
   }
 
@@ -288,7 +331,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       border-color: var(--rc-brand);
       color: #fff;
 
-      &:hover { background: #1d3f9e; }
+      &:hover {
+        background: #1d3f9e;
+      }
     }
 
     &--danger {

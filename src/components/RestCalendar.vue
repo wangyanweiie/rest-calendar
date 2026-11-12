@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { WEEK_CN, todayISO } from "../lib/dates";
-import type { MarkMap } from "../lib/marks";
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { WEEK_CN, todayISO } from '../lib/dates';
+import type { MarkMap } from '../lib/marks';
 import {
   canShift,
   clampMonth,
@@ -11,11 +11,11 @@ import {
   shiftMonth,
   type DayInfo,
   type MonthPoint,
-} from "../lib/schedule";
-import CalendarDay from "./calendar/CalendarDay.vue";
-import CalendarHeader from "./calendar/CalendarHeader.vue";
-import CalendarLegend from "./calendar/CalendarLegend.vue";
-import DayMarkDialog from "./calendar/DayMarkDialog.vue";
+} from '../lib/schedule';
+import CalendarDay from './calendar/CalendarDay.vue';
+import CalendarHeader from './calendar/CalendarHeader.vue';
+import CalendarLegend from './calendar/CalendarLegend.vue';
+import DayMarkDialog from './calendar/DayMarkDialog.vue';
 
 interface Props {
   /**
@@ -92,22 +92,18 @@ const cells = computed(() =>
   monthCells(view.value.y, view.value.m, props.weekStart).map((iso, index) => {
     if (!iso)
       return {
-        kind: "empty" as const,
+        kind: 'empty' as const,
         key: `empty-${view.value.y}-${view.value.m}-${index}`,
       };
     return {
-      kind: "day" as const,
+      kind: 'day' as const,
       key: iso,
       info: getDayInfo(iso, options.value),
     };
   }),
 );
-const prevDisabled = computed(
-  () => !canShift(view.value, props.start, props.end, -1),
-);
-const nextDisabled = computed(
-  () => !canShift(view.value, props.start, props.end, 1),
-);
+const prevDisabled = computed(() => !canShift(view.value, props.start, props.end, -1));
+const nextDisabled = computed(() => !canShift(view.value, props.start, props.end, 1));
 const activeDay = computed(() =>
   activeIso.value ? getDayInfo(activeIso.value, options.value) : null,
 );
@@ -147,33 +143,33 @@ function onSave(note: string, overtime: boolean, meeting: boolean, leave: boolea
   const iso = activeIso.value;
   if (!iso) return;
   closeDialog();
-  emit("save", iso, note, overtime, meeting, leave);
+  emit('save', iso, note, overtime, meeting, leave);
 }
 
 function onClear() {
   const iso = activeIso.value;
   if (!iso) return;
   closeDialog();
-  emit("clear", iso);
+  emit('clear', iso);
 }
 
 function syncCompact() {
-  compact.value = window.matchMedia("(max-width: 640px)").matches;
+  compact.value = window.matchMedia('(max-width: 640px)').matches;
 }
 
 onMounted(() => {
   syncCompact();
-  const initial = new URLSearchParams(location.search).get("m");
+  const initial = new URLSearchParams(location.search).get('m');
   if (initial && /^\d{4}-\d{2}$/.test(initial)) {
-    const [year, month] = initial.split("-").map(Number);
+    const [year, month] = initial.split('-').map(Number);
     goToMonth(year, month);
   } else {
     view.value = clampMonth(monthOf(todayISO()), props.start, props.end);
   }
-  window.addEventListener("resize", syncCompact);
+  window.addEventListener('resize', syncCompact);
 });
 
-onUnmounted(() => window.removeEventListener("resize", syncCompact));
+onUnmounted(() => window.removeEventListener('resize', syncCompact));
 
 defineExpose({ goToMonth });
 </script>
@@ -205,11 +201,7 @@ defineExpose({ goToMonth });
 
     <div class="cal__grid">
       <template v-for="cell in cells" :key="cell.key">
-        <div
-          v-if="cell.kind === 'empty'"
-          class="cal__pad"
-          aria-hidden="true"
-        ></div>
+        <div v-if="cell.kind === 'empty'" class="cal__pad" aria-hidden="true"></div>
         <CalendarDay
           v-else
           :info="cell.info"
@@ -222,12 +214,7 @@ defineExpose({ goToMonth });
     </div>
 
     <CalendarLegend />
-    <DayMarkDialog
-      :day="activeDay"
-      @close="closeDialog"
-      @save="onSave"
-      @clear="onClear"
-    />
+    <DayMarkDialog :day="activeDay" @close="closeDialog" @save="onSave" @clear="onClear" />
   </section>
 </template>
 
@@ -240,9 +227,9 @@ defineExpose({ goToMonth });
   box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.35);
   color: var(--rc-ink);
   font-family:
-    "PingFang SC",
-    "Hiragino Sans GB",
-    "Microsoft YaHei",
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
     system-ui,
     -apple-system,
     sans-serif;

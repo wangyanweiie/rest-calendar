@@ -1,13 +1,13 @@
 export interface Holiday {
-  name: string
-  festival: string
-  type: 'statutory' | 'adjusted'
+  name: string;
+  festival: string;
+  type: 'statutory' | 'adjusted';
 }
 
 export interface HolidaySpan {
-  festival: string
-  start: string
-  end: string
+  festival: string;
+  start: string;
+  end: string;
 }
 
 /**
@@ -46,7 +46,7 @@ export const HOLIDAYS: Record<string, Holiday> = {
   '2027-10-05': { name: '假期', festival: '国庆', type: 'adjusted' },
   '2027-10-06': { name: '假期', festival: '国庆', type: 'adjusted' },
   '2027-10-07': { name: '假期', festival: '国庆', type: 'adjusted' },
-}
+};
 
 export const HOLIDAY_SPANS: HolidaySpan[] = [
   { festival: '中秋', start: '2026-09-25', end: '2026-09-27' },
@@ -58,7 +58,7 @@ export const HOLIDAY_SPANS: HolidaySpan[] = [
   { festival: '端午', start: '2027-06-09', end: '2027-06-09' },
   { festival: '中秋', start: '2027-09-15', end: '2027-09-15' },
   { festival: '国庆', start: '2027-10-01', end: '2027-10-07' },
-]
+];
 
 export const MAKEUP_DAYS: Record<string, string> = {
   '2026-09-20': '国庆调休',
@@ -68,4 +68,4 @@ export const MAKEUP_DAYS: Record<string, string> = {
   '2027-05-08': '劳动节调休',
   '2027-09-26': '国庆调休',
   '2027-10-09': '国庆调休',
-}
+};

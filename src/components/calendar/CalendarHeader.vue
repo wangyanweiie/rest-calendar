@@ -3,45 +3,45 @@ interface Props {
   /**
    * 当前显示的年份
    */
-  year: number
+  year: number;
   /**
    * 当前显示的月份，1–12
    */
-  month: number
+  month: number;
   /**
    * 每周期上班天数，用于副标题
    */
-  workDays: number
+  workDays: number;
   /**
    * 每周期休息天数，用于副标题
    */
-  restDays: number
+  restDays: number;
   /**
    * 排班范围起点 YYYY-MM-DD
    */
-  start: string
+  start: string;
   /**
    * 排班范围终点 YYYY-MM-DD
    */
-  end: string
+  end: string;
   /**
    * 已经是范围内第一个月，不能再往前
    */
-  prevDisabled: boolean
+  prevDisabled: boolean;
   /**
    * 已经是范围内最后一个月，不能再往后
    */
-  nextDisabled: boolean
+  nextDisabled: boolean;
 }
 
-defineProps<Props>()
+defineProps<Props>();
 
 /**
  * 翻月。step 为 -1 上个月，1 下个月
  */
 const emit = defineEmits<{
-  shift: [step: number]
-}>()
+  shift: [step: number];
+}>();
 </script>
 
 <template>
@@ -51,8 +51,24 @@ const emit = defineEmits<{
       <small>上{{ workDays }}休{{ restDays }} · {{ start }} → {{ end }}</small>
     </div>
     <div class="header__nav">
-      <button class="header__btn" type="button" aria-label="上个月" :disabled="prevDisabled" @click="emit('shift', -1)">‹</button>
-      <button class="header__btn" type="button" aria-label="下个月" :disabled="nextDisabled" @click="emit('shift', 1)">›</button>
+      <button
+        class="header__btn"
+        type="button"
+        aria-label="上个月"
+        :disabled="prevDisabled"
+        @click="emit('shift', -1)"
+      >
+        ‹
+      </button>
+      <button
+        class="header__btn"
+        type="button"
+        aria-label="下个月"
+        :disabled="nextDisabled"
+        @click="emit('shift', 1)"
+      >
+        ›
+      </button>
     </div>
   </header>
 </template>
@@ -68,7 +84,7 @@ const emit = defineEmits<{
   &__title {
     font-size: 17px;
     font-weight: 700;
-    letter-spacing: .01em;
+    letter-spacing: 0.01em;
 
     small {
       display: block;
@@ -102,13 +118,15 @@ const emit = defineEmits<{
     }
 
     &:disabled {
-      opacity: .3;
+      opacity: 0.3;
       cursor: not-allowed;
     }
   }
 
   @media (max-width: 640px) {
-    &__title { font-size: 15px; }
+    &__title {
+      font-size: 15px;
+    }
   }
 }
 </style>
