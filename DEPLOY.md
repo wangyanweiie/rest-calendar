@@ -1,13 +1,25 @@
+# 部署
+
+页面已改为 Vue + Vite。本地先 `npm install && npm run build`，发布目录是 `dist/`，不要再把源码目录直接拖到 Netlify。
+
+GitHub Pages：Settings → Pages → Source 选 **GitHub Actions**。之后 push 到 `main` 会自动更新备用地址，不消耗 Netlify 积分。
+
+Netlify：Actions 里手动运行 **Deploy to Netlify**（工作流会先构建再部署 `dist`）。
+
+---
+
 # 部署到 GitHub Pages（微信可直接打开）
 
 **当前状态：已部署 ✅**
+
+本地是 Vue + Vite 项目。发布前要 `npm run build`，把 `dist/` 作为站点目录。直接上传源码目录不会得到可打开的页面。
 
 > ⚠️ 补充：Gitee Pages 已停止服务（个人版入口已下线），Gitee 仅作代码镜像，不能再托管网页。
 > 国内访问请用 Cloudflare Pages / Netlify / EdgeOne Pages，详见 [MIRROR.md](MIRROR.md)。
 
 - 仓库：<https://github.com/wangyanweiie/rest-calendar>
 - 线上地址：<https://wangyanweiie.github.io/rest-calendar/>
-- Pages 源：`main` 分支 / 根目录，每次 `git push` 后约 1 分钟自动重新发布
+- Pages 源：GitHub Actions（`.github/workflows/pages.yml` 构建 `dist/` 后发布）
 
 
 仓库已经在本地初始化并完成首次提交（分支 `main`），只差「推到 GitHub + 打开 Pages」。
