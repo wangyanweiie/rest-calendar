@@ -5,7 +5,7 @@
 
 [![Deploy to Netlify](https://github.com/wangyanweiie/rest-calendar/actions/workflows/netlify.yml/badge.svg)](https://github.com/wangyanweiie/rest-calendar/actions/workflows/netlify.yml)
 
-<img src="qrcode.png" alt="扫码打开" width="150">
+<img src="public/qrcode.png" alt="扫码打开" width="150">
 > 手机/微信里直接打开线上链接即可。备注、见面、加班和请假保存在本机浏览器。
 
 Vue 3 + TypeScript + Vite。备注、见面、加班和请假存在浏览器 `localStorage`，可用页面上的按钮导出 / 导入 JSON。

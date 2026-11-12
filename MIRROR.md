@@ -96,10 +96,10 @@ git push gitee main
 
 ## 四、多地址并存
 
-部署好后，把页面底部「扫码打开」卡片与 `qrcode.png` 换成最快的地址即可，二维码重新生成：
+部署好后，把页面底部「扫码打开」卡片与 `public/qrcode.png` 换成最快的地址即可，二维码重新生成：
 
 ```bash
-curl -o qrcode.png "https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=20&data=<新地址>"
+curl -o public/qrcode.png "https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=20&data=<新地址>"
 ```
 
 然后 `git push origin main && git push gitee main`。
