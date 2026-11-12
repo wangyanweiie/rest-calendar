@@ -62,9 +62,9 @@ describe('排班', () => {
     expect(solar.lunarBirthdays).toEqual([]);
     expect(solar.lunarText.length).toBeGreaterThan(0);
 
-    const wywSolar = getDayInfo('2027-09-14', base);
-    expect(wywSolar.solarBirthdays).toEqual(['wyw']);
-    expect(wywSolar.lunarBirthdays).toEqual([]);
+    const removed = getDayInfo('2027-09-14', base);
+    expect(removed.solarBirthdays).toEqual([]);
+    expect(removed.lunarBirthdays).toEqual([]);
 
     const lunarNewYear = getDayInfo('2027-02-06', base);
     expect(lunarNewYear.lunarText).toBe('正月');

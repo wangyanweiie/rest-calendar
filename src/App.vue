@@ -277,12 +277,8 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
           {{ selected.holiday.name }}{{ selected.isStatutory ? ' · 法定节假日' : ' · 假期（调休）' }}
         </span>
         <span v-if="selected.makeup" class="pill dark">{{ selected.makeup }} 上班</span>
-        <span v-for="name in selected.solarBirthdays" :key="`solar-${name}`" class="pill solar">
-          {{ name }} 公历生日
-        </span>
-        <span v-for="name in selected.lunarBirthdays" :key="`lunar-${name}`" class="pill lunar">
-          {{ name }} 农历生日
-        </span>
+        <span v-if="selected.solarBirthdays.length" class="pill solar">公历生日</span>
+        <span v-if="selected.lunarBirthdays.length" class="pill lunar">农历生日</span>
         <span v-if="selected.meeting" class="pill meet">见面</span>
         <span v-if="selected.overtime" class="pill ot">加班</span>
         <span v-if="selected.leave" class="pill leave">请假</span>
@@ -383,7 +379,7 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
         >
           <span class="d">{{ row.solar.iso }}</span>
           <span class="t">
-            {{ row.name }} 公历生日
+            公历生日
             <template v-if="row.solar.lunarFull">· {{ row.solar.lunarFull }}</template>
           </span>
           <span class="s">{{ row.solar.weekdayLabel }}</span>
@@ -397,7 +393,7 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
         >
           <span class="d">{{ row.lunar.iso }}</span>
           <span class="t">
-            {{ row.name }} 农历生日
+            农历生日
             <template v-if="row.lunar.lunarFull">· {{ row.lunar.lunarFull }}</template>
           </span>
           <span class="s">{{ row.lunar.weekdayLabel }}</span>

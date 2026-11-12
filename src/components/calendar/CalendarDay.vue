@@ -48,8 +48,8 @@ function labelOf(info: DayInfo): string {
     info.makeup ? `${info.makeup} 上班` : '',
     info.restOnWeekend ? '与周末重合' : '',
     info.lunarFull ? `农历${info.lunarFull}` : '',
-    info.solarBirthdays.length ? `${info.solarBirthdays.join('、')} 公历生日` : '',
-    info.lunarBirthdays.length ? `${info.lunarBirthdays.join('、')} 农历生日` : '',
+    info.solarBirthdays.length ? '公历生日' : '',
+    info.lunarBirthdays.length ? '农历生日' : '',
     info.meeting ? '见面' : '',
     info.overtime ? '加班' : '',
     info.leave ? '请假' : '',
@@ -156,19 +156,13 @@ function holidayLabel(info: DayInfo): string {
         "
         class="day__tags"
       >
-        <span
-          v-for="name in info.solarBirthdays"
-          :key="`solar-${name}`"
-          class="day__tag day__tag--solar"
-        >
-          {{ name }}
+        <span v-if="info.solarBirthdays.length" class="day__tag day__tag--solar">
+          <span class="day__tag-full">公历生日</span>
+          <span class="day__tag-short">公</span>
         </span>
-        <span
-          v-for="name in info.lunarBirthdays"
-          :key="`lunar-${name}`"
-          class="day__tag day__tag--lunar"
-        >
-          {{ name }}
+        <span v-if="info.lunarBirthdays.length" class="day__tag day__tag--lunar">
+          <span class="day__tag-full">农历生日</span>
+          <span class="day__tag-short">农</span>
         </span>
         <span v-if="info.inRange && info.meeting" class="day__tag day__tag--meeting">
           <span class="day__tag-full">见面</span>

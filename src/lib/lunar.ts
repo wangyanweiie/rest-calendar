@@ -66,7 +66,6 @@ const DAY_NAMES = [
  */
 export const ANNUAL_BIRTHDAYS = [
   { name: 'cmy', solarMonth: 2, solarDay: 26, lunarMonth: 1, lunarDay: 30 },
-  { name: 'wyw', solarMonth: 9, solarDay: 14, lunarMonth: 7, lunarDay: 24 },
 ];
 
 /**

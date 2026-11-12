@@ -65,7 +65,7 @@ export interface DayInfo {
    */
   lunarMonthStart: boolean;
   /**
-   * 这一天过公历生日的名字，例如 cmy、wyw
+   * 这一天过公历生日的名字，页面上不展示名字
    */
   solarBirthdays: string[];
   /**

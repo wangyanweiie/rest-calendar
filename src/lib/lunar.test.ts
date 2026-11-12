@@ -9,7 +9,7 @@ import {
 } from './lunar';
 
 describe('农历', () => {
-  it('1998-02-26 是戊寅年正月三十，也是 cmy 的公历和农历生日', () => {
+  it('1998-02-26 是戊寅年正月三十，也是公历和农历生日', () => {
     const lunar = solarToLunar('1998-02-26');
     expect(lunar?.full).toBe('戊寅年正月三十');
     expect(solarBirthdayNames(2, 26)).toEqual(['cmy']);
@@ -18,11 +18,11 @@ describe('农历', () => {
     expect(isLunarBirthday(lunar)).toBe(true);
   });
 
-  it('1998-09-14 是 wyw 的公历生日，农历七月二十四另算', () => {
+  it('1998-09-14 不再单独标注生日', () => {
     const lunar = solarToLunar('1998-09-14');
     expect(lunar?.full).toContain('七月廿四');
-    expect(solarBirthdayNames(9, 14)).toEqual(['wyw']);
-    expect(lunarBirthdayNames(lunar)).toEqual(['wyw']);
+    expect(solarBirthdayNames(9, 14)).toEqual([]);
+    expect(lunarBirthdayNames(lunar)).toEqual([]);
   });
 
   it('春节当天显示正月', () => {
@@ -54,17 +54,5 @@ describe('农历', () => {
     expect(hits).toHaveLength(1);
     expect(hits[0]).not.toBe('2027-02-26');
     expect(solarToLunar(hits[0])?.full).toContain('正月三十');
-
-    cursor = parseISO('2027-08-01');
-    const autumnEnd = parseISO('2027-10-31');
-    const wywHits: string[] = [];
-    while (cursor <= autumnEnd) {
-      const iso = toISO(cursor);
-      if (lunarBirthdayNames(solarToLunar(iso)).includes('wyw')) wywHits.push(iso);
-      cursor = addDays(cursor, 1);
-    }
-    expect(wywHits).toHaveLength(1);
-    expect(wywHits[0]).not.toBe('2027-09-14');
-    expect(solarToLunar(wywHits[0])?.full).toContain('七月廿四');
   });
 });

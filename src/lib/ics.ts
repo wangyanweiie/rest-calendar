@@ -21,10 +21,10 @@ export function buildICS(days: DayInfo[], workDays: number, restDays: number): s
     if (day.overtime) summary = `${summary ? summary + ' · ' : ''}加班`;
     if (day.leave) summary = `${summary ? summary + ' · ' : ''}请假`;
     if (day.solarBirthdays.length) {
-      summary = `${summary ? summary + ' · ' : ''}${day.solarBirthdays.join('、')} 公历生日`;
+      summary = `${summary ? summary + ' · ' : ''}公历生日`;
     }
     if (day.lunarBirthdays.length) {
-      summary = `${summary ? summary + ' · ' : ''}${day.lunarBirthdays.join('、')} 农历生日`;
+      summary = `${summary ? summary + ' · ' : ''}农历生日`;
     }
     if (!summary) continue;
     const start = day.iso.replace(/-/g, '');
