@@ -447,6 +447,40 @@ function holidayLabel(info: DayInfo): string {
     .day__tag-short {
       display: inline;
     }
+    .day__tags:has(.day__tag:nth-child(2)) {
+      .day__tag {
+        width: 6px;
+        height: 6px;
+        min-width: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        font-size: 0;
+        line-height: 0;
+        overflow: hidden;
+      }
+      .day__tag--meeting {
+        background: #16a34a;
+      }
+      .day__tag--overtime {
+        background: #4c1d95;
+      }
+      .day__tag--leave {
+        background: #64748b;
+      }
+      .day__tag--holiday {
+        background: #b45309;
+      }
+      .day__tag--makeup {
+        background: #1e293b;
+      }
+      .day__tag--solar {
+        background: #be185d;
+      }
+      .day__tag--lunar {
+        background: #3730a3;
+      }
+    }
   }
 }
 </style>
