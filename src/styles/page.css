@@ -535,6 +535,9 @@ footer {
   }
 }
 @media (max-width: 560px) {
+  .birthdays__pair {
+    grid-template-columns: 1fr;
+  }
   .date-chip {
     font-size: 11px;
     padding: 4px 6px;
