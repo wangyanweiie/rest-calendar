@@ -35,11 +35,24 @@ describe('排班', () => {
   it('备注和加班来自 marks，不改变排班', () => {
     const day = getDayInfo('2026-11-13', {
       ...base,
-      marks: { '2026-11-13': { note: '换班', overtime: true } },
+      marks: { '2026-11-13': { note: '换班', overtime: true, meeting: false, leave: true } },
     })
     expect(day.note).toBe('换班')
     expect(day.overtime).toBe(true)
+    expect(day.meeting).toBe(false)
+    expect(day.leave).toBe(true)
     expect(day.isRest).toBe(true)
+  })
+
+  it('公历生日和农历生日分开标注', () => {
+    const solar = getDayInfo('2027-02-26', base)
+    expect(solar.solarBirthday).toBe(true)
+    expect(solar.lunarBirthday).toBe(false)
+    expect(solar.lunarText.length).toBeGreaterThan(0)
+
+    const lunarNewYear = getDayInfo('2027-02-06', base)
+    expect(lunarNewYear.lunarText).toBe('正月')
+    expect(lunarNewYear.lunarMonthStart).toBe(true)
   })
 
   it('统计包含标红天数', () => {

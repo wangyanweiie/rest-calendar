@@ -4,7 +4,7 @@ import type { DayInfo } from '../../lib/schedule'
 
 interface Props {
   /**
-   * 正在编辑的日期。null 表示关闭，有值时用它初始化备注和加班草稿
+   * 正在编辑的日期。null 表示关闭，有值时用它初始化备注和开关
    */
   day: DayInfo | null
 }
@@ -19,15 +19,26 @@ const emit = defineEmits<{
   /**
    * 保存草稿。note 已去掉首尾空格
    */
-  save: [note: string, overtime: boolean]
+  save: [note: string, overtime: boolean, meeting: boolean, leave: boolean]
   /**
-   * 备注和加班都清空，父组件删除这一天的记录
+   * 备注和三个开关都清空，父组件删除这一天的记录
    */
   clear: []
 }>()
 
 const draftNote = ref('')
+/**
+ * 见面开关草稿
+ */
+const draftMeeting = ref(false)
+/**
+ * 加班开关草稿
+ */
 const draftOvertime = ref(false)
+/**
+ * 请假开关草稿
+ */
+const draftLeave = ref(false)
 /**
  * 第一次点删除或清空保存时先变成确认，再点一次才真正清除
  */
@@ -37,7 +48,9 @@ const noteInput = ref<HTMLTextAreaElement | null>(null)
 watch(() => props.day, (day) => {
   if (!day) return
   draftNote.value = day.note
+  draftMeeting.value = day.meeting
   draftOvertime.value = day.overtime
+  draftLeave.value = day.leave
   confirming.value = false
   void nextTick(() => noteInput.value?.focus())
 }, { immediate: true })
@@ -48,13 +61,20 @@ function close() {
 }
 
 /**
- * 没有备注也没有加班时，已有记录需要再确认一次才删除
+ * 草稿里是否打开了见面、加班或请假
+ */
+function draftFlags(): boolean {
+  return draftMeeting.value || draftOvertime.value || draftLeave.value
+}
+
+/**
+ * 没有备注也没有开关时，已有记录需要再确认一次才删除
  */
 function onSave() {
   if (!props.day) return
   const note = draftNote.value.trim()
-  const had = !!(props.day.note || props.day.overtime)
-  if (!note && !draftOvertime.value && had) {
+  const had = !!(props.day.note || props.day.meeting || props.day.overtime || props.day.leave)
+  if (!note && !draftFlags() && had) {
     if (!confirming.value) {
       confirming.value = true
       return
@@ -62,11 +82,11 @@ function onSave() {
     emit('clear')
     return
   }
-  if (!note && !draftOvertime.value) {
+  if (!note && !draftFlags()) {
     close()
     return
   }
-  emit('save', note, draftOvertime.value)
+  emit('save', note, draftOvertime.value, draftMeeting.value, draftLeave.value)
 }
 
 function onDelete() {
@@ -92,13 +112,27 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         <span class="dialog__title">{{ day.iso }} · {{ day.weekdayLabel }}</span>
         <span class="dialog__meta">{{ day.isWork ? '上班日' : '休息日' }}</span>
       </div>
-      <div class="dialog__overtime">
+      <div class="dialog__row">
         <div>
-          <span class="dialog__label">加班</span>
-          <span class="dialog__hint">打开后这一天标成橙色</span>
+          <span class="dialog__label">见面</span>
+          <span class="dialog__hint">加上绿色角标，不改变当天底色</span>
         </div>
         <button
-          class="dialog__switch"
+          class="dialog__switch dialog__switch--meeting"
+          type="button"
+          role="switch"
+          :aria-checked="draftMeeting"
+          aria-label="标注见面"
+          @click="draftMeeting = !draftMeeting; confirming = false"
+        ></button>
+      </div>
+      <div class="dialog__row">
+        <div>
+          <span class="dialog__label">加班</span>
+          <span class="dialog__hint">加上橙色角标，不改变当天底色</span>
+        </div>
+        <button
+          class="dialog__switch dialog__switch--overtime"
           type="button"
           role="switch"
           :aria-checked="draftOvertime"
@@ -106,10 +140,24 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           @click="draftOvertime = !draftOvertime; confirming = false"
         ></button>
       </div>
-      <textarea ref="noteInput" v-model="draftNote" class="dialog__input" rows="3" placeholder="例如：调休、换班、请假…"></textarea>
+      <div class="dialog__row">
+        <div>
+          <span class="dialog__label">请假</span>
+          <span class="dialog__hint">加上灰色角标，不改变当天底色</span>
+        </div>
+        <button
+          class="dialog__switch dialog__switch--leave"
+          type="button"
+          role="switch"
+          :aria-checked="draftLeave"
+          aria-label="标注请假"
+          @click="draftLeave = !draftLeave; confirming = false"
+        ></button>
+      </div>
+      <textarea ref="noteInput" v-model="draftNote" class="dialog__input" rows="3" placeholder="例如：换班、调休、补充说明…"></textarea>
       <div class="dialog__actions">
         <button
-          v-if="day.note || day.overtime || confirming"
+          v-if="day.note || day.meeting || day.overtime || day.leave || confirming"
           class="dialog__btn dialog__btn--danger"
           :class="{ 'dialog__btn--confirm': confirming }"
           type="button"
@@ -154,7 +202,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   &__title { font-size: 14px; font-weight: 700; }
   &__meta { font-size: 11.5px; color: #94a3b8; white-space: nowrap; }
 
-  &__overtime {
+  &__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -192,11 +240,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       transition: transform .15s ease;
     }
 
-    &[aria-checked='true'] {
-      background: #f97316;
-
-      &::after { transform: translateX(18px); }
-    }
+    &[aria-checked='true']::after { transform: translateX(18px); }
+    &--meeting[aria-checked='true'] { background: #16a34a; }
+    &--overtime[aria-checked='true'] { background: #f97316; }
+    &--leave[aria-checked='true'] { background: #64748b; }
   }
 
   &__input {

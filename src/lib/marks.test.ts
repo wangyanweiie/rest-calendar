@@ -17,15 +17,19 @@ describe('备注与加班存储', () => {
   it('兼容旧的字符串备注，加班写成对象', () => {
     const storage = memoryStorage()
     const marks: MarkMap = {
-      '2026-11-12': { note: '请假', overtime: false },
-      '2026-11-13': { note: '换班', overtime: true },
-      '2026-11-14': { note: '', overtime: true },
+      '2026-11-12': { note: '调休', overtime: false, meeting: false, leave: false },
+      '2026-11-13': { note: '换班', overtime: true, meeting: false, leave: false },
+      '2026-11-14': { note: '', overtime: true, meeting: false, leave: false },
+      '2026-11-15': { note: '', overtime: false, meeting: true, leave: false },
+      '2026-11-16': { note: '回家', overtime: false, meeting: false, leave: true },
     }
     saveMarks(marks, storage)
     const raw = JSON.parse(storage.getItem('rest-calendar-notes-v1') || '{}')
-    expect(raw['2026-11-12']).toBe('请假')
+    expect(raw['2026-11-12']).toBe('调休')
     expect(raw['2026-11-13']).toEqual({ n: '换班', ot: 1 })
     expect(raw['2026-11-14']).toEqual({ ot: 1 })
+    expect(raw['2026-11-15']).toEqual({ mt: 1 })
+    expect(raw['2026-11-16']).toEqual({ n: '回家', lv: 1 })
     expect(loadMarks(storage)).toEqual(marks)
   })
 
@@ -36,15 +40,16 @@ describe('备注与加班存储', () => {
       '2026-11-02': { n: '已加班', ot: 1 },
     }))
     const current = loadMarks(storage)
-    expect(current['2026-11-01']).toEqual({ note: '旧备注', overtime: false })
+    expect(current['2026-11-01']).toEqual({ note: '旧备注', overtime: false, meeting: false, leave: false })
     const incoming = parseMarksImport(exportMarks({
-      '2026-11-02': { note: '覆盖', overtime: true },
-      '2026-12-01': { note: '', overtime: true },
+      '2026-11-02': { note: '覆盖', overtime: true, meeting: true, leave: false },
+      '2026-12-01': { note: '', overtime: true, meeting: false, leave: false },
     }))
     const merged = mergeMarks(current, incoming)
     expect(merged['2026-11-01'].note).toBe('旧备注')
     expect(merged['2026-11-02'].note).toBe('覆盖')
     expect(merged['2026-12-01'].overtime).toBe(true)
+    expect(merged['2026-11-02'].meeting).toBe(true)
   })
 
   it('拒绝空文件和坏 JSON', () => {

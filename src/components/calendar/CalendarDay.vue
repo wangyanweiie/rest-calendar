@@ -11,7 +11,7 @@ interface Props {
    */
   today: string
   /**
-   * 窄屏时格子里不显示备注文字
+   * 窄屏时备注只显示更少的字
    */
   compact: boolean
 }
@@ -47,7 +47,12 @@ function labelOf(info: DayInfo): string {
     info.holiday ? info.holiday.name : '',
     info.makeup ? `${info.makeup} 上班` : '',
     info.restOnWeekend ? '与周末重合' : '',
+    info.lunarFull ? `农历${info.lunarFull}` : '',
+    info.solarBirthday ? '公历生日' : '',
+    info.lunarBirthday ? '农历生日' : '',
+    info.meeting ? '见面' : '',
     info.overtime ? '加班' : '',
+    info.leave ? '请假' : '',
     info.note ? `备注：${info.note}` : '',
   ].filter(Boolean).join(' · ')
 }
@@ -86,6 +91,24 @@ function onEdit() {
   clearPress()
   emit('edit', props.info.iso)
 }
+
+/**
+ * 格子里只露前几个字，完整备注在下方详情
+ */
+function notePreview(note: string): string {
+  const limit = props.compact ? 2 : 4
+  if (note.length <= limit) return note
+  return `${note.slice(0, limit)}…`
+}
+
+/**
+ * 节假日名称和农历重复时，格子里改显示节日名
+ */
+function holidayLabel(info: DayInfo): string {
+  if (!info.holiday) return ''
+  if (info.holiday.name === info.lunarText) return info.holiday.festival
+  return info.holiday.name
+}
 </script>
 
 <template>
@@ -97,8 +120,8 @@ function onEdit() {
       'day--rest': info.inRange && info.isRest,
       'day--weekend': info.inRange && info.restOnWeekend,
       'day--today': info.iso === today,
-      'day--overtime': info.inRange && info.overtime,
-      'day--note': info.inRange && !!info.note,
+      'day--solar': info.solarBirthday,
+      'day--lunar-birth': info.lunarBirthday,
     }"
     type="button"
     :aria-label="labelOf(info)"
@@ -112,11 +135,31 @@ function onEdit() {
     @click="onClick"
   >
     <div class="day__top">
-      <span class="day__date">{{ info.day }}</span>
-      <span v-if="info.inRange && (info.overtime || info.makeup || info.holiday)" class="day__tags">
-        <span v-if="info.overtime" class="day__tag day__tag--overtime">加</span>
-        <span v-if="info.makeup" class="day__tag day__tag--makeup">调</span>
-        <span v-else-if="info.holiday" class="day__tag day__tag--holiday">
+      <span class="day__date">
+        {{ info.day }}
+        <span
+          v-if="info.lunarText"
+          class="day__lunar"
+          :class="{ 'day__lunar--month': info.lunarMonthStart }"
+        >{{ info.lunarText }}</span>
+      </span>
+      <span
+        v-if="(info.inRange && (info.meeting || info.overtime || info.leave || info.makeup || info.holiday)) || info.solarBirthday || info.lunarBirthday"
+        class="day__tags"
+      >
+        <span v-if="info.solarBirthday" class="day__tag day__tag--solar">
+          <span class="day__tag-full">生日</span>
+          <span class="day__tag-short">生</span>
+        </span>
+        <span v-if="info.lunarBirthday" class="day__tag day__tag--lunar">
+          <span class="day__tag-full">农历生日</span>
+          <span class="day__tag-short">农</span>
+        </span>
+        <span v-if="info.inRange && info.meeting" class="day__tag day__tag--meeting">见面</span>
+        <span v-if="info.inRange && info.overtime" class="day__tag day__tag--overtime">加班</span>
+        <span v-if="info.inRange && info.leave" class="day__tag day__tag--leave">请假</span>
+        <span v-if="info.inRange && info.makeup" class="day__tag day__tag--makeup">调</span>
+        <span v-else-if="info.inRange && info.holiday" class="day__tag day__tag--holiday">
           <span class="day__tag-full">{{ info.isStatutory ? '法定' : '假日' }}</span>
           <span class="day__tag-short">{{ info.isStatutory ? '节' : '假' }}</span>
         </span>
@@ -124,8 +167,8 @@ function onEdit() {
     </div>
     <div v-if="info.inRange" class="day__bottom">
       <span class="day__state">{{ info.isWork ? '班' : '休' }}</span>
-      <span v-if="info.note && !compact" class="day__note">{{ info.note }}</span>
-      <span v-if="info.holiday" class="day__holiday">{{ info.holiday.name }}</span>
+      <span v-if="info.note" class="day__note">{{ notePreview(info.note) }}</span>
+      <span v-if="info.holiday" class="day__holiday">{{ holidayLabel(info) }}</span>
     </div>
   </button>
 </template>
@@ -160,10 +203,22 @@ function onEdit() {
   }
 
   &__date {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
     font-size: 15px;
     font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
+  }
+
+  &__lunar {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: #94a3b8;
+
+    &--month { color: #0f766e; }
   }
 
   &__tags {
@@ -183,9 +238,13 @@ function onEdit() {
     letter-spacing: .04em;
     white-space: nowrap;
 
+    &--meeting { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     &--overtime { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+    &--leave { background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; }
     &--holiday { background: var(--rc-gold-soft); color: var(--rc-gold); border: 1px solid #fcd34d; }
     &--makeup { background: #1e293b; color: #fff; }
+    &--solar { background: #fdf2f8; color: #be185d; border: 1px solid #f9a8d4; }
+    &--lunar { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
   }
 
   &__tag-short { display: none; }
@@ -250,23 +309,11 @@ function onEdit() {
     box-shadow: 0 10px 20px -14px rgba(220, 38, 38, .9);
 
     .day__date,
+    .day__lunar,
     .day__holiday,
     .day__note { color: #fff; }
     .day__state { background: rgba(255, 255, 255, .92); color: #b91c1c; }
     .day__tag--holiday { background: #fff7ed; color: #b91c1c; border-color: #fecaca; }
-  }
-
-  &--overtime {
-    background: linear-gradient(160deg, #fb923c 0%, #f97316 52%, #ea580c 100%);
-    border-color: #c2410c;
-    box-shadow: 0 10px 20px -14px rgba(234, 88, 12, .9);
-
-    .day__date,
-    .day__holiday,
-    .day__note { color: #fff; }
-    .day__state { background: rgba(255, 255, 255, .92); color: #c2410c; }
-    .day__tag--overtime { background: rgba(255, 255, 255, .94); color: #c2410c; border-color: transparent; }
-    .day__tag--holiday { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
   }
 
   &--today { outline: 2px solid var(--rc-brand); outline-offset: -2px; }
@@ -278,12 +325,9 @@ function onEdit() {
     cursor: default;
 
     &:hover { transform: none; box-shadow: none; }
-    .day__date { color: #cbd5e1; }
+    .day__date,
+    .day__lunar { color: #cbd5e1; }
   }
-
-  &--note { box-shadow: inset 0 0 0 2px #22c55e; }
-  &--weekend.day--note { box-shadow: inset 0 0 0 2px #bbf7d0, 0 10px 20px -14px rgba(220, 38, 38, .9); }
-  &--overtime.day--note { box-shadow: inset 0 0 0 2px #bbf7d0, 0 10px 20px -14px rgba(234, 88, 12, .9); }
 
   @media (max-width: 640px) {
     min-height: 64px;

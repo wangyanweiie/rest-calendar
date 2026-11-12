@@ -4,12 +4,15 @@
  */
 const items = [
   { name: 'work', label: '上班' },
-  { name: 'rest', label: '休息（工作日）' },
-  { name: 'weekend', label: '休息日与周末重合（标红）' },
+  { name: 'rest', label: '休息' },
+  { name: 'weekend', label: '休息日与周末重合' },
   { name: 'holiday', label: '法定节假日' },
   { name: 'makeup', label: '调休上班' },
+  { name: 'meeting', label: '见面' },
   { name: 'overtime', label: '加班' },
-  { name: 'note', label: '有备注' },
+  { name: 'leave', label: '请假' },
+  { name: 'solar', label: '公历生日' },
+  { name: 'lunar', label: '农历生日' },
 ]
 </script>
 
@@ -51,8 +54,11 @@ const items = [
     &--weekend { background: linear-gradient(160deg, #f43f5e, #dc2626); border-color: #dc2626; }
     &--holiday { background: var(--rc-gold-soft); border-color: #fcd34d; }
     &--makeup { background: #1e293b; border-color: #1e293b; }
-    &--overtime { background: linear-gradient(160deg, #fb923c, #ea580c); border-color: #c2410c; }
-    &--note { background: #ecfdf5; border-color: #22c55e; }
+    &--meeting { background: #dcfce7; border-color: #86efac; }
+    &--overtime { background: #fff7ed; border-color: #fdba74; }
+    &--leave { background: #f3f4f6; border-color: #d1d5db; }
+    &--solar { background: #fdf2f8; border-color: #f9a8d4; }
+    &--lunar { background: #eef2ff; border-color: #818cf8; }
   }
 }
 </style>

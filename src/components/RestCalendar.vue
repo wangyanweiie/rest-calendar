@@ -62,7 +62,7 @@ const emit = defineEmits<{
   /**
    * 弹窗保存。父组件写入 marks
    */
-  save: [iso: string, note: string, overtime: boolean];
+  save: [iso: string, note: string, overtime: boolean, meeting: boolean, leave: boolean];
   /**
    * 弹窗确认删除。父组件去掉这一天的 marks
    */
@@ -143,11 +143,11 @@ function closeDialog() {
   activeIso.value = null;
 }
 
-function onSave(note: string, overtime: boolean) {
+function onSave(note: string, overtime: boolean, meeting: boolean, leave: boolean) {
   const iso = activeIso.value;
   if (!iso) return;
   closeDialog();
-  emit("save", iso, note, overtime);
+  emit("save", iso, note, overtime, meeting, leave);
 }
 
 function onClear() {

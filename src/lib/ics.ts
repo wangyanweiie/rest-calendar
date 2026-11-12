@@ -17,7 +17,11 @@ export function buildICS(days: DayInfo[], workDays: number, restDays: number): s
     if (day.isRest) summary = day.restOnWeekend ? '休息（与周末重合）' : '休息'
     if (day.holiday) summary = `${summary ? summary : '上班'} · ${day.holiday.name}`
     if (day.makeup) summary = `调休上班 · ${day.makeup}`
+    if (day.meeting) summary = `${summary ? summary + ' · ' : ''}见面`
     if (day.overtime) summary = `${summary ? summary + ' · ' : ''}加班`
+    if (day.leave) summary = `${summary ? summary + ' · ' : ''}请假`
+    if (day.solarBirthday) summary = `${summary ? summary + ' · ' : ''}公历生日`
+    if (day.lunarBirthday) summary = `${summary ? summary + ' · ' : ''}农历生日`
     if (!summary) continue
     const start = day.iso.replace(/-/g, '')
     const end = toISO(addDays(parseISO(day.iso), 1)).replace(/-/g, '')

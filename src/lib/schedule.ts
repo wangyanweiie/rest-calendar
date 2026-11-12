@@ -1,5 +1,6 @@
 import { HOLIDAYS, HOLIDAY_SPANS, MAKEUP_DAYS, type Holiday, type HolidaySpan } from '../data/holidays'
 import { WEEK_LABEL, addDays, diffDays, isWeekend, parseISO, toISO } from './dates'
+import { isLunarBirthday, isSolarBirthday, solarToLunar } from './lunar'
 import type { MarkMap } from './marks'
 
 export interface ScheduleOptions {
@@ -29,7 +30,38 @@ export interface DayInfo {
   isStatutory: boolean
   makeup: string | null
   note: string
+  /**
+   * 手动标注的加班
+   */
   overtime: boolean
+  /**
+   * 手动标注的见面
+   */
+  meeting: boolean
+  /**
+   * 手动标注的请假
+   */
+  leave: boolean
+  /**
+   * 格子里的农历短文案，初一显示月名
+   */
+  lunarText: string
+  /**
+   * 完整农历，例如戊寅年正月三十
+   */
+  lunarFull: string
+  /**
+   * 农历初一，用来加深月名颜色
+   */
+  lunarMonthStart: boolean
+  /**
+   * 每年公历 2 月 26 日
+   */
+  solarBirthday: boolean
+  /**
+   * 每年正月三十
+   */
+  lunarBirthday: boolean
   inRange: boolean
 }
 
@@ -66,6 +98,7 @@ export function getDayInfo(iso: string, options: ScheduleOptions): DayInfo {
   const mark = options.marks?.[iso]
   const startDt = parseISO(options.start)
   const endDt = parseISO(options.end)
+  const lunar = solarToLunar(iso)
   return {
     iso,
     year: dt.getUTCFullYear(),
@@ -84,6 +117,13 @@ export function getDayInfo(iso: string, options: ScheduleOptions): DayInfo {
     makeup,
     note: mark?.note ?? '',
     overtime: !!mark?.overtime,
+    meeting: !!mark?.meeting,
+    leave: !!mark?.leave,
+    lunarText: lunar?.text ?? '',
+    lunarFull: lunar?.full ?? '',
+    lunarMonthStart: lunar?.day === 1,
+    solarBirthday: isSolarBirthday(dt.getUTCMonth() + 1, dt.getUTCDate()),
+    lunarBirthday: isLunarBirthday(lunar),
     inRange: dt >= startDt && dt <= endDt,
   }
 }
