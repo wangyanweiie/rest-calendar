@@ -6,7 +6,7 @@ import {
   type HolidaySpan,
 } from '../data/holidays';
 import { WEEK_LABEL, addDays, diffDays, isWeekend, parseISO, toISO } from './dates';
-import { isLunarBirthday, isSolarBirthday, solarToLunar } from './lunar';
+import { lunarBirthdayNames, solarBirthdayNames, solarToLunar } from './lunar';
 import type { MarkMap } from './marks';
 
 export interface ScheduleOptions {
@@ -65,13 +65,13 @@ export interface DayInfo {
    */
   lunarMonthStart: boolean;
   /**
-   * 每年公历 2 月 26 日
+   * 这一天过公历生日的名字，例如 cmy、wyw
    */
-  solarBirthday: boolean;
+  solarBirthdays: string[];
   /**
-   * 每年正月三十
+   * 这一天过农历生日的名字，不含闰月
    */
-  lunarBirthday: boolean;
+  lunarBirthdays: string[];
   inRange: boolean;
 }
 
@@ -133,8 +133,8 @@ export function getDayInfo(iso: string, options: ScheduleOptions): DayInfo {
     lunarText: lunar?.text ?? '',
     lunarFull: lunar?.full ?? '',
     lunarMonthStart: lunar?.day === 1,
-    solarBirthday: isSolarBirthday(dt.getUTCMonth() + 1, dt.getUTCDate()),
-    lunarBirthday: isLunarBirthday(lunar),
+    solarBirthdays: solarBirthdayNames(dt.getUTCMonth() + 1, dt.getUTCDate()),
+    lunarBirthdays: lunarBirthdayNames(lunar),
     inRange: dt >= startDt && dt <= endDt,
   };
 }

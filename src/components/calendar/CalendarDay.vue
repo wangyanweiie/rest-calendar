@@ -48,8 +48,8 @@ function labelOf(info: DayInfo): string {
     info.makeup ? `${info.makeup} 上班` : '',
     info.restOnWeekend ? '与周末重合' : '',
     info.lunarFull ? `农历${info.lunarFull}` : '',
-    info.solarBirthday ? '公历生日' : '',
-    info.lunarBirthday ? '农历生日' : '',
+    info.solarBirthdays.length ? `${info.solarBirthdays.join('、')} 公历生日` : '',
+    info.lunarBirthdays.length ? `${info.lunarBirthdays.join('、')} 农历生日` : '',
     info.meeting ? '见面' : '',
     info.overtime ? '加班' : '',
     info.leave ? '请假' : '',
@@ -122,8 +122,8 @@ function holidayLabel(info: DayInfo): string {
       'day--rest': info.inRange && info.isRest,
       'day--weekend': info.inRange && info.restOnWeekend,
       'day--today': info.iso === today,
-      'day--solar': info.solarBirthday,
-      'day--lunar-birth': info.lunarBirthday,
+      'day--solar': info.solarBirthdays.length > 0,
+      'day--lunar-birth': info.lunarBirthdays.length > 0,
     }"
     type="button"
     :aria-label="labelOf(info)"
@@ -151,18 +151,24 @@ function holidayLabel(info: DayInfo): string {
         v-if="
           (info.inRange &&
             (info.meeting || info.overtime || info.leave || info.makeup || info.holiday)) ||
-          info.solarBirthday ||
-          info.lunarBirthday
+          info.solarBirthdays.length ||
+          info.lunarBirthdays.length
         "
         class="day__tags"
       >
-        <span v-if="info.solarBirthday" class="day__tag day__tag--solar">
-          <span class="day__tag-full">生日</span>
-          <span class="day__tag-short">生</span>
+        <span
+          v-for="name in info.solarBirthdays"
+          :key="`solar-${name}`"
+          class="day__tag day__tag--solar"
+        >
+          {{ name }}
         </span>
-        <span v-if="info.lunarBirthday" class="day__tag day__tag--lunar">
-          <span class="day__tag-full">农历生日</span>
-          <span class="day__tag-short">农</span>
+        <span
+          v-for="name in info.lunarBirthdays"
+          :key="`lunar-${name}`"
+          class="day__tag day__tag--lunar"
+        >
+          {{ name }}
         </span>
         <span v-if="info.inRange && info.meeting" class="day__tag day__tag--meeting">
           <span class="day__tag-full">见面</span>

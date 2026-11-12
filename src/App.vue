@@ -12,6 +12,7 @@ import {
   type MarkMap,
 } from './lib/marks';
 import { todayISO } from './lib/dates';
+import { ANNUAL_BIRTHDAYS } from './lib/lunar';
 import { getDays, getHolidayPeriods, getSummary, groupByCycle, type DayInfo } from './lib/schedule';
 
 const baseUrl = import.meta.env.BASE_URL;
@@ -52,8 +53,21 @@ const redRows = computed(() =>
 );
 const periods = computed(() => getHolidayPeriods(start.value, end.value));
 const makeups = computed(() => days.value.filter((day) => day.makeup));
-const birthdays = computed(() =>
-  days.value.filter((day) => day.solarBirthday || day.lunarBirthday),
+/**
+ * 每人一行，左列公历生日，右列农历生日
+ */
+const birthdayRows = computed(() =>
+  ANNUAL_BIRTHDAYS.flatMap((person) => {
+    const solar = days.value.filter((day) => day.solarBirthdays.includes(person.name));
+    const lunar = days.value.filter((day) => day.lunarBirthdays.includes(person.name));
+    const count = Math.max(solar.length, lunar.length);
+    return Array.from({ length: count }, (_, index) => ({
+      key: `${person.name}-${solar[index]?.iso ?? lunar[index]?.iso ?? index}`,
+      name: person.name,
+      solar: solar[index] ?? null,
+      lunar: lunar[index] ?? null,
+    }));
+  }),
 );
 const stats = computed(() => [
   {
@@ -188,9 +202,7 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
       <!-- prettier-ignore -->
       <p class="sub">
         排班规则：每 5 天循环「上班 2 天 → 休息 3 天」。休息日若落在周六 / 周日
-        <b style="color: #ef4444">标红</b>， 并额外标注<b style="color: #b45309">法定节假日</b>与<b>调休上班</b>日。 每一天显示农历，每年
-        <b style="color: #be185d">2 月 26 日</b> 标为公历生日，每年
-        <b style="color: #3730a3">正月三十</b> 标为农历生日。
+        <b style="color: #ef4444">标红</b>， 并额外标注<b style="color: #b45309">法定节假日</b>与<b>调休上班</b>日。 每一天显示农历。
         <b>长按或双击日期</b>可写备注，并用开关标注见面、加班或请假。这三个标记只加角标，不盖住休息日原来的颜色。记录保存在这台浏览器里。
       </p>
     </header>
@@ -265,8 +277,12 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
           {{ selected.holiday.name }}{{ selected.isStatutory ? ' · 法定节假日' : ' · 假期（调休）' }}
         </span>
         <span v-if="selected.makeup" class="pill dark">{{ selected.makeup }} 上班</span>
-        <span v-if="selected.solarBirthday" class="pill solar">公历生日</span>
-        <span v-if="selected.lunarBirthday" class="pill lunar">农历生日</span>
+        <span v-for="name in selected.solarBirthdays" :key="`solar-${name}`" class="pill solar">
+          {{ name }} 公历生日
+        </span>
+        <span v-for="name in selected.lunarBirthdays" :key="`lunar-${name}`" class="pill lunar">
+          {{ name }} 农历生日
+        </span>
         <span v-if="selected.meeting" class="pill meet">见面</span>
         <span v-if="selected.overtime" class="pill ot">加班</span>
         <span v-if="selected.leave" class="pill leave">请假</span>
@@ -283,26 +299,6 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
         </span>
       </template>
       <span v-else class="detail-hint">点击任意日期查看当天详情</span>
-    </div>
-
-    <div v-if="birthdays.length" class="birthdays">
-      <h2>每年单独标注</h2>
-      <button
-        v-for="day in birthdays"
-        :key="day.iso"
-        class="birthdays__row"
-        type="button"
-        @click="jump(day.year, day.month)"
-      >
-        <span class="d">{{ day.iso }}</span>
-        <span class="t">
-          <template v-if="day.solarBirthday">公历生日</template>
-          <template v-if="day.solarBirthday && day.lunarBirthday">·</template>
-          <template v-if="day.lunarBirthday">农历生日</template>
-          <template v-if="day.lunarFull">· {{ day.lunarFull }}</template>
-        </span>
-        <span class="s">{{ day.weekdayLabel }}</span>
-      </button>
     </div>
 
     <div class="cols">
@@ -373,6 +369,40 @@ onUnmounted(() => window.removeEventListener('storage', onStorage));
         <div class="k">{{ item.k }}</div>
         <div class="v">{{ item.v }}</div>
         <div class="n">{{ item.n }}</div>
+      </div>
+    </div>
+
+    <div v-if="birthdayRows.length" class="birthdays">
+      <h2>每年单独标注</h2>
+      <div v-for="row in birthdayRows" :key="row.key" class="birthdays__pair">
+        <button
+          v-if="row.solar"
+          class="birthdays__row"
+          type="button"
+          @click="jump(row.solar.year, row.solar.month)"
+        >
+          <span class="d">{{ row.solar.iso }}</span>
+          <span class="t">
+            {{ row.name }} 公历生日
+            <template v-if="row.solar.lunarFull">· {{ row.solar.lunarFull }}</template>
+          </span>
+          <span class="s">{{ row.solar.weekdayLabel }}</span>
+        </button>
+        <span v-else class="birthdays__row birthdays__row--empty">范围内无公历生日</span>
+        <button
+          v-if="row.lunar"
+          class="birthdays__row"
+          type="button"
+          @click="jump(row.lunar.year, row.lunar.month)"
+        >
+          <span class="d">{{ row.lunar.iso }}</span>
+          <span class="t">
+            {{ row.name }} 农历生日
+            <template v-if="row.lunar.lunarFull">· {{ row.lunar.lunarFull }}</template>
+          </span>
+          <span class="s">{{ row.lunar.weekdayLabel }}</span>
+        </button>
+        <span v-else class="birthdays__row birthdays__row--empty">范围内无农历生日</span>
       </div>
     </div>
 

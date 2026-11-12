@@ -282,11 +282,19 @@ h1 {
   margin: 0 0 2px;
   font-size: 14px;
 }
+.birthdays__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  align-items: stretch;
+}
 .birthdays__row {
   display: flex;
   align-items: baseline;
   gap: 10px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font: inherit;
   text-align: left;
   font-size: 12.5px;
@@ -296,6 +304,11 @@ h1 {
   border: 1px solid var(--line);
   cursor: pointer;
 }
+.birthdays__row--empty {
+  align-items: center;
+  color: #94a3b8;
+  cursor: default;
+}
 .birthdays__row .d {
   font-weight: 700;
   color: #0f172a;
@@ -303,6 +316,7 @@ h1 {
 }
 .birthdays__row .t {
   flex: 1;
+  min-width: 0;
   color: #334155;
 }
 .birthdays__row .s {

@@ -20,8 +20,12 @@ export function buildICS(days: DayInfo[], workDays: number, restDays: number): s
     if (day.meeting) summary = `${summary ? summary + ' · ' : ''}见面`;
     if (day.overtime) summary = `${summary ? summary + ' · ' : ''}加班`;
     if (day.leave) summary = `${summary ? summary + ' · ' : ''}请假`;
-    if (day.solarBirthday) summary = `${summary ? summary + ' · ' : ''}公历生日`;
-    if (day.lunarBirthday) summary = `${summary ? summary + ' · ' : ''}农历生日`;
+    if (day.solarBirthdays.length) {
+      summary = `${summary ? summary + ' · ' : ''}${day.solarBirthdays.join('、')} 公历生日`;
+    }
+    if (day.lunarBirthdays.length) {
+      summary = `${summary ? summary + ' · ' : ''}${day.lunarBirthdays.join('、')} 农历生日`;
+    }
     if (!summary) continue;
     const start = day.iso.replace(/-/g, '');
     const end = toISO(addDays(parseISO(day.iso), 1)).replace(/-/g, '');

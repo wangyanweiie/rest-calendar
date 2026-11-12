@@ -62,21 +62,45 @@ const DAY_NAMES = [
 ];
 
 /**
- * 公历生日，每年 2 月 26 日
+ * 每年单独标注的生日。公历和农历分开，闰月不算
  */
-export const SOLAR_BIRTHDAY_MONTH = 2;
+export const ANNUAL_BIRTHDAYS = [
+  { name: 'cmy', solarMonth: 2, solarDay: 26, lunarMonth: 1, lunarDay: 30 },
+  { name: 'wyw', solarMonth: 9, solarDay: 14, lunarMonth: 7, lunarDay: 24 },
+];
+
 /**
- * 公历生日，每年 2 月 26 日
+ * 这一天过公历生日的名字
  */
-export const SOLAR_BIRTHDAY_DAY = 26;
+export function solarBirthdayNames(month: number, day: number): string[] {
+  return ANNUAL_BIRTHDAYS.filter((item) => item.solarMonth === month && item.solarDay === day).map(
+    (item) => item.name,
+  );
+}
+
 /**
- * 农历生日在正月，不含闰正月
+ * 这一天过农历生日的名字，闰月不算
  */
-export const LUNAR_BIRTHDAY_MONTH = 1;
+export function lunarBirthdayNames(lunar: LunarDate | null): string[] {
+  if (!lunar || lunar.leap) return [];
+  return ANNUAL_BIRTHDAYS.filter(
+    (item) => item.lunarMonth === lunar.month && item.lunarDay === lunar.day,
+  ).map((item) => item.name);
+}
+
 /**
- * 农历生日是正月三十
+ * 是否有人在这一天过公历生日
  */
-export const LUNAR_BIRTHDAY_DAY = 30;
+export function isSolarBirthday(month: number, day: number): boolean {
+  return solarBirthdayNames(month, day).length > 0;
+}
+
+/**
+ * 是否有人在这一天过农历生日
+ */
+export function isLunarBirthday(lunar: LunarDate | null): boolean {
+  return lunarBirthdayNames(lunar).length > 0;
+}
 
 export interface LunarDate {
   /**
@@ -212,23 +236,4 @@ export function solarToLunar(iso: string): LunarDate | null {
     text: day === 1 ? monthName : dayName,
     full: `${yearName}年${monthName}${dayName}`,
   };
-}
-
-/**
- * 每年公历 2 月 26 日
- */
-export function isSolarBirthday(month: number, day: number): boolean {
-  return month === SOLAR_BIRTHDAY_MONTH && day === SOLAR_BIRTHDAY_DAY;
-}
-
-/**
- * 每年正月三十，闰正月不算
- */
-export function isLunarBirthday(lunar: LunarDate | null): boolean {
-  return (
-    !!lunar &&
-    !lunar.leap &&
-    lunar.month === LUNAR_BIRTHDAY_MONTH &&
-    lunar.day === LUNAR_BIRTHDAY_DAY
-  );
 }

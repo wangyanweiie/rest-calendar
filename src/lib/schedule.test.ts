@@ -58,9 +58,13 @@ describe('排班', () => {
 
   it('公历生日和农历生日分开标注', () => {
     const solar = getDayInfo('2027-02-26', base);
-    expect(solar.solarBirthday).toBe(true);
-    expect(solar.lunarBirthday).toBe(false);
+    expect(solar.solarBirthdays).toEqual(['cmy']);
+    expect(solar.lunarBirthdays).toEqual([]);
     expect(solar.lunarText.length).toBeGreaterThan(0);
+
+    const wywSolar = getDayInfo('2027-09-14', base);
+    expect(wywSolar.solarBirthdays).toEqual(['wyw']);
+    expect(wywSolar.lunarBirthdays).toEqual([]);
 
     const lunarNewYear = getDayInfo('2027-02-06', base);
     expect(lunarNewYear.lunarText).toBe('正月');

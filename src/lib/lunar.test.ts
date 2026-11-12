@@ -1,13 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, parseISO, toISO } from './dates';
-import { isLunarBirthday, isSolarBirthday, solarToLunar } from './lunar';
+import {
+  isLunarBirthday,
+  isSolarBirthday,
+  lunarBirthdayNames,
+  solarBirthdayNames,
+  solarToLunar,
+} from './lunar';
 
 describe('农历', () => {
-  it('1998-02-26 是戊寅年正月三十', () => {
+  it('1998-02-26 是戊寅年正月三十，也是 cmy 的公历和农历生日', () => {
     const lunar = solarToLunar('1998-02-26');
     expect(lunar?.full).toBe('戊寅年正月三十');
+    expect(solarBirthdayNames(2, 26)).toEqual(['cmy']);
+    expect(lunarBirthdayNames(lunar)).toEqual(['cmy']);
     expect(isSolarBirthday(2, 26)).toBe(true);
     expect(isLunarBirthday(lunar)).toBe(true);
+  });
+
+  it('1998-09-14 是 wyw 的公历生日，农历七月二十四另算', () => {
+    const lunar = solarToLunar('1998-09-14');
+    expect(lunar?.full).toContain('七月廿四');
+    expect(solarBirthdayNames(9, 14)).toEqual(['wyw']);
+    expect(lunarBirthdayNames(lunar)).toEqual(['wyw']);
   });
 
   it('春节当天显示正月', () => {
@@ -23,6 +38,8 @@ describe('农历', () => {
 
   it('公历生日和农历生日在其他年份会分开', () => {
     const solar = solarToLunar('2027-02-26');
+    expect(solarBirthdayNames(2, 26)).toEqual(['cmy']);
+    expect(lunarBirthdayNames(solar)).toEqual([]);
     expect(isSolarBirthday(2, 26)).toBe(true);
     expect(isLunarBirthday(solar)).toBe(false);
 
@@ -31,11 +48,23 @@ describe('农历', () => {
     const hits: string[] = [];
     while (cursor <= end) {
       const iso = toISO(cursor);
-      if (isLunarBirthday(solarToLunar(iso))) hits.push(iso);
+      if (lunarBirthdayNames(solarToLunar(iso)).includes('cmy')) hits.push(iso);
       cursor = addDays(cursor, 1);
     }
     expect(hits).toHaveLength(1);
     expect(hits[0]).not.toBe('2027-02-26');
     expect(solarToLunar(hits[0])?.full).toContain('正月三十');
+
+    cursor = parseISO('2027-08-01');
+    const autumnEnd = parseISO('2027-10-31');
+    const wywHits: string[] = [];
+    while (cursor <= autumnEnd) {
+      const iso = toISO(cursor);
+      if (lunarBirthdayNames(solarToLunar(iso)).includes('wyw')) wywHits.push(iso);
+      cursor = addDays(cursor, 1);
+    }
+    expect(wywHits).toHaveLength(1);
+    expect(wywHits[0]).not.toBe('2027-09-14');
+    expect(solarToLunar(wywHits[0])?.full).toContain('七月廿四');
   });
 });
