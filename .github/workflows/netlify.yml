@@ -33,10 +33,17 @@ jobs:
         if: steps.guard.outputs.configured == 'true'
         with:
           node-version: 20
+          cache: npm
+
+      - name: 构建
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          npm ci
+          npm run build
 
       - name: 部署到 Netlify
         if: steps.guard.outputs.configured == 'true'
         run: |
-          npx --yes netlify-cli@17 deploy --prod --dir . \
+          npx --yes netlify-cli@17 deploy --prod --dir dist \
             --site "$NETLIFY_SITE_ID" \
             --message "GitHub Actions ${GITHUB_SHA::7} · ${GITHUB_REF_NAME}"

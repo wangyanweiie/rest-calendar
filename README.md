@@ -6,98 +6,61 @@
 [![Deploy to Netlify](https://github.com/wangyanweiie/rest-calendar/actions/workflows/netlify.yml/badge.svg)](https://github.com/wangyanweiie/rest-calendar/actions/workflows/netlify.yml)
 
 <img src="qrcode.png" alt="扫码打开" width="150">
-> 手机/微信里直接打开该链接即可；`standalone.html` 是单文件版，可离线打开或发给别人。
+> 手机/微信里直接打开线上链接即可。备注、见面、加班和请假保存在本机浏览器。
 
-零依赖 Web Component（原生 Custom Element + Shadow DOM），单文件即可引入，支持桌面与移动端。
+Vue 3 + TypeScript + Vite。备注、见面、加班和请假存在浏览器 `localStorage`，可用页面上的按钮导出 / 导入 JSON。
+
+```bash
+npm install
+npm run dev
+npm run build   # 产物在 dist/，Netlify 与 GitHub Pages 都发布这个目录
+```
 
 ```
-calendar/
-├── index.html          # 演示页（可直接双击打开）
-├── rest-calendar.js    # 组件本体，~21KB，无依赖
-├── preview-desktop.png
-└── preview-mobile.png
+src/
+├── App.vue                      # 页面：范围、统计、导入导出
+├── components/RestCalendar.vue  # 月历编排：翻页、把单击/保存传给页面
+├── components/calendar/         # 标题、日期格、图例、备注弹窗
+├── lib/                         # 排班、localStorage、ics
+└── data/holidays.ts             # 节假日与调休
 ```
 
 ## 快速开始
 
-直接双击 `index.html` 即可（`file://` 可用，脚本是普通 script 不是 module）。
-自行接入时：
-
-```html
-<script src="rest-calendar.js"></script>
-
-<rest-calendar start="2026-11-09" end="2027-02-13" work-days="2" rest-days="3"></rest-calendar>
+```bash
+npm install
+npm run dev      # 本地打开
+npm test
+npm run build    # 产出 dist/
 ```
 
-## 属性
+排班、节假日、统计在 `src/lib/schedule.ts`。备注、见面、加班和请假在 `src/lib/marks.ts`。
 
-| 属性 | 默认值 | 说明 |
-| --- | --- | --- |
-| `start` | 今天 | 日历起始日期 `YYYY-MM-DD` |
-| `end` | `2027-12-31` | 截止日期 |
-| `cycle-start` | 同 `start` | 循环第 1 天；`start` 早于它时会按同一循环向前倒推（本页固定 2026-11-09）|
-| `work-days` | `2` | 每周期上班天数 |
-| `rest-days` | `3` | 每周期休息天数 |
-| `week-start` | `1` | 一周起始，`0`=周日 `1`=周一 |
-| `show-holidays` | `true` | 是否显示法定节假日 / 调休 |
-| `month` | 当前月 | 初始显示月份 `YYYY-MM` |
+演示页支持深链：`?m=2027-02&start=2026-09-30&end=2027-02-13`。
 
-## 事件
+## 备注、见面、加班和请假
 
-| 事件 | detail | 说明 |
-| --- | --- | --- |
-| `calendar-ready` | — | 首次渲染完成 |
-| `month-change` | `{year, month}` | 切换月份 |
-| `day-click` | 单日完整信息对象 | 点击日期 |
-| `notes-changed` | `{iso, note, notes}` | 备注新增/修改/删除 |
-
-```js
-document.querySelector('rest-calendar').addEventListener('day-click', e => {
-  console.log(e.detail.iso, e.detail.isWork, e.detail.holiday, e.detail.makeup);
-});
-```
-
-## 方法
-
-| 方法 | 说明 |
-| --- | --- |
-| `getDayInfo('2027-02-06')` | 单日信息：`cycle` / `restOnWeekend` / `holiday` / `makeup` / `isStatutory` … |
-| `getDays()` | 范围内逐日信息数组 |
-| `getSummary()` | 统计：`total / work / rest / redOnWeekend / statutoryDays / holidayDays / holidayPeriodDays / makeupDays / redDates` |
-| `getNote(iso)` | 读取某天备注 |
-| `setNote(iso, text)` | 写入备注（空字符串等于删除） |
-| `removeNote(iso)` | 删除备注 |
-| `getNotes()` | 全部备注 `{iso: text}` |
-| `getHolidayPeriods()` | 官方假期区间：`[{festival, start, end, days, statutory}]`（按当前范围裁剪）|
-| `setRange(start, end)` | 改日期范围 |
-| `goToMonth(y, m)` | 跳转月份 |
-| `setHolidays(map)` | 覆盖节假日数据 |
-| `setMakeupDays(map)` | 覆盖调休上班数据 |
-| `setHolidayPeriods(list)` | 覆盖官方假期区间 |
-| `buildICS()` | 生成 `.ics` 文本 |
-
-演示页还支持深链：`index.html?m=2027-02&start=2026-11-09&end=2027-02-13`。
-
-## 备注功能
-
-- 交互：**长按日期块 550ms** 或右键 → 弹窗输入；删除需二次确认（「删除」→「确认删除？」）
-- 显示：有备注的日期块显示橙色描边 + 备注文字（超长自动省略），并出现在图例「有备注」中
-- 存储：`localStorage`，键默认 `rest-calendar-notes-v1`，可用属性 `storage-key` 自定义
-- 多标签页自动同步（监听 `storage` 事件）
-- 关闭备注功能：`notes-enabled="false"`
+- 交互：长按 550ms、双击或右键打开弹窗。见面、加班、请假各是一个开关，打开后只在右上角加角标，不覆盖上班、休息和周末红。删除需要再点一次「确认删除？」
+- 存储：浏览器 `localStorage`，键 `rest-calendar-notes-v1`。只有备注时仍是字符串；带标记时是对象，`n` 备注、`ot` 加班、`mt` 见面、`lv` 请假。旧数据能直接读
+- 页面上可以导出 / 导入 JSON。导入按日期合并，同一天以文件为准
+- 同一浏览器的其他标签页会同步
 
 ## 视觉规则
 
 | 状态 | 表现 |
 | --- | --- |
 | 上班 | 白底 + 灰色「班」 |
-| 休息（工作日） | 浅蓝底 + 蓝色「休」 |
+| 休息 | 浅蓝底 + 蓝色「休」 |
 | **休息日 ∩ 周末** | **红色渐变底 + 白字「休」** |
 | 法定节假日 | 金色「法定」角标 + 节日名（除夕 / 春节 / 初二…） |
 | 假期（调休形成） | 金色「假日」角标 |
 | 调休上班 | 深色「调」角标（与上二休三冲突时同时保留红色休息标记） |
+| 见面 | 保留当天底色，绿色「见面」角标 |
+| 加班 | 保留当天底色，橙色「加班」角标 |
+| 请假 | 保留当天底色，灰色「请假」角标 |
+| 有备注 | 格子里只显示前几个字，点击后在下方详情看全文 |
 
-窄屏（≤640px）下隐藏冗余的「班 / 休」chip（底色已表意），只保留节日名，改为单字角标「节 / 假」。
+窄屏（≤640px）下隐藏冗余的「班 / 休」chip（底色已表意），只保留节日名。节假日角标改为单字「节 / 假」。见面、加班、请假仍显示「见面」「加班」「请假」。备注在窄屏只显示前 2 个字，较宽屏幕显示前 4 个字。
 
 ## 节假日数据
 
