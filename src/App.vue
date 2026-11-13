@@ -152,7 +152,7 @@ function exportIcs() {
 
 function exportJson() {
   downloadText('rest-calendar-marks.json', exportMarks(marks.value), 'application/json');
-  showNotice('已导出当前浏览器里的备注和加班');
+  showNotice('已导出当前浏览器里的备注');
 }
 
 async function importJson(event: Event) {
